@@ -1,0 +1,3 @@
+library chatmesdk;
+
+class Chatmesdk {}
