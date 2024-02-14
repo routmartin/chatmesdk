@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import '../../data/model/attachment_model.dart';
+import '../../data/chat_room/model/attachment_model.dart';
+
 import '../constant/app_assets.dart';
 
 class MediaHelper {

@@ -8,12 +8,12 @@ import 'package:socket_io_client/socket_io_client.dart';
 
 import '../../util/helper/scroll_to_top.dart';
 import '../api_helper/base/base.dart';
-import '../model/chat_model/chat_room_model.dart';
-import '../model/chat_model/chat_room_response_model.dart';
-import '../model/chat_model/sticker.dart';
-import '../model/listen_message_response_model.dart';
-import '../model/listen_room_model.dart';
-import '../model/mark_as_read_response_model/mark_as_read_response_model.dart';
+import 'model/chat_model/chat_room_model.dart';
+import 'model/chat_model/chat_room_response_model.dart';
+import 'model/chat_model/sticker.dart';
+import 'model/listen_message_response_model.dart';
+import 'model/listen_room_model.dart';
+import 'model/mark_as_read_response_model/mark_as_read_response_model.dart';
 
 class ChatRoomController extends GetxController with WidgetsBindingObserver, GetSingleTickerProviderStateMixin {
   late Socket _socket;

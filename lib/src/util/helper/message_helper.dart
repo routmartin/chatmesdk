@@ -12,7 +12,7 @@ import 'package:intl/intl.dart';
 import 'package:sound_mode/sound_mode.dart';
 import 'package:sound_mode/utils/ringer_mode_statuses.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../data/model/message_response_model.dart';
+import '../../data/chat_room/model/message_response_model.dart';
 import 'date_time.dart';
 import 'method_channel_helper.dart';
 

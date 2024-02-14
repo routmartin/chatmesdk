@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
-import '../model/attachment_model.dart';
-import '../model/message_response_model.dart';
+import 'model/attachment_model.dart';
+import 'model/message_response_model.dart';
 
 class ChatRoomViewMediaController extends GetxController {
   List<AttachmentModel>? selectFiles = [];

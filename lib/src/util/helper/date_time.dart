@@ -2,7 +2,7 @@ import 'package:get/get.dart';
 import 'package:intl/date_symbol_data_custom.dart';
 import 'package:intl/intl.dart';
 import 'package:moment_dart/moment_dart.dart';
-import '../../data/model/message_response_model.dart';
+import '../../data/chat_room/model/message_response_model.dart';
 
 class DateTimeHelper {
   static String get _languageCode => Get.locale?.languageCode ?? 'en';

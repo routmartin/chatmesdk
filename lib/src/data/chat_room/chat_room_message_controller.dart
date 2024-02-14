@@ -4,22 +4,22 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:path_provider/path_provider.dart';
 
 import 'package:scrollview_observer/scrollview_observer.dart';
 import 'package:socket_io_client/socket_io_client.dart';
-import 'package:video_thumbnail/video_thumbnail.dart';
+
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 
 import '../../util/constant/app_constant.dart';
 import '../../util/helper/crash_report.dart';
 import '../../util/helper/message_helper.dart';
 import '../../util/helper/util.dart';
-import '../../view/widget/widget_share.dart';
+
 import '../api_helper/base/base.dart';
-import '../model/listen_room_model.dart';
-import '../model/message_response_model.dart';
+
 import 'chat_room_controller.dart';
+import 'model/listen_room_model.dart';
+import 'model/message_response_model.dart';
 
 class ChatRoomMessageController extends GetxController with WidgetsBindingObserver {
   // animatino
