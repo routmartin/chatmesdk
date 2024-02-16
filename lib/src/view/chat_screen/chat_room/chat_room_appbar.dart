@@ -1,16 +1,14 @@
-import 'package:chatme/data/chat_room/chat_room_controller.dart';
-import 'package:chatme/data/chat_room/chat_room_message_controller.dart';
-import 'package:chatme/routes/app_routes.dart';
-import 'package:chatme/template/chat_screen/chat_room/widget/message_popup_button.dart';
-import 'package:chatme/util/constant/app_asset.dart';
-import 'package:chatme/util/helper/chat_helper.dart';
-import 'package:chatme/util/helper/message_helper.dart';
-import 'package:chatme/util/text_style.dart';
-import 'package:chatme/widgets/fair_binding_widget/widget_binding_profile_radius.dart';
-import 'package:chatme/widgets/widget_view_profile.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../../data/chat_room/chat_room.dart';
+import '../../../util/constant/app_assets.dart';
+import '../../../util/helper/message_helper.dart';
+import '../../../util/text_style.dart';
+import '../../../util/theme/app_color.dart';
+import '../../widget/widget_binding_profile_radius.dart';
+// import 'widget/message_popup_button.dart';
 
 class ChatRoomAppBar extends StatefulWidget {
   const ChatRoomAppBar({Key? key}) : super(key: key);
@@ -22,7 +20,7 @@ class ChatRoomAppBar extends StatefulWidget {
 class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
   MenuOptionItem? selectedMenu;
   final controller = Get.put(ChatRoomMessageController());
-  final ChatRoomController chatRoomController = Get.put(ChatRoomController());
+  // final chatRoomController = Get.put(ChatRoomController());
   @override
   Widget build(BuildContext context) {
     return AppBar(
@@ -36,9 +34,8 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
             init: ChatRoomMessageController(),
             id: 'appbar',
             builder: (controller) {
-              return controller.isMultiSelection
-                  ? _buildMulitSelectAppbar()
-                  : _buildChatAppbar();
+              return _buildChatAppbar();
+              // return controller.isMultiSelection ? _buildMulitSelectAppbar() : _buildChatAppbar();
             }),
       ),
     );
@@ -48,307 +45,37 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
     return Row(
       children: [
         InkWell(
-          onTap: _onBack,
-          child: Container(
-            width: Get.width * .14,
-            color: Colors.transparent,
-            height: 40,
-            alignment: Alignment.center,
-            child: GetBuilder<ChatRoomController>(
-                id: 'totalCount',
-                builder: (_roomController) {
-                  return Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisAlignment:
-                        _roomController.totalMessageUnreadCount > 0
-                            ? MainAxisAlignment.end
-                            : MainAxisAlignment.center,
-                    children: [
-                      Image.asset(
-                        Assets.app_assetsIconsSearchBackButton,
-                        color: Colors.black,
-                        height: 16,
-                        width: 16,
-                      ),
-                      buildTotalReadCount(_roomController),
-                      SizedBox(width: 10),
-                    ],
-                  );
-                }),
-          ),
-        ),
-        InkWell(
-          onTap: controller.avatar.isEmpty
-              ? null
-              : () async =>
-                  await Get.to(() => ViewProfilePhotos(url: controller.avatar)),
-          child: GestureDetector(
-            onTap: controller.avatar == ''
-                ? null
-                : () => _navigateToViewProfile(controller.avatar),
-            child: WidgetBindingProfileRadius(
-              borderRadius: 8,
-              size: 45,
-              avatarUrl: controller.avatar,
-              isActive: controller.isOnline,
-            ),
-          ),
-        ),
-        SizedBox(width: 12),
-        Expanded(
-          child: InkWell(
-            onTap: controller.isOfficial
-                ? null
-                : () => controller
-                    .navigateToViewContactFromAppBarTap(controller.profileId),
+            onTap: _onBack,
             child: Container(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  (!controller.isOfficial)
-                      ? Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                controller.name,
-                                overflow: TextOverflow.ellipsis,
-                                maxLines: 1,
-                                textAlign: TextAlign.left,
-                                style: TextStyle(
-                                  color: Colors.black,
-                                  fontWeight: FontWeight.w400,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                            SizedBox(width: 6),
-                            AnimatedOpacity(
-                              opacity: controller.isMute ? 1 : 0,
-                              duration: Duration(milliseconds: 400),
-                              child: Image.asset(
-                                Assets.app_assetsIconsChatMuteIcon,
-                                width: 12,
-                                height: 12,
-                              ),
-                            ),
-                            SizedBox(width: 4),
-                          ],
-                        )
-                      : Row(
-                          children: [
-                            Text(
-                              controller.name,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontWeight: FontWeight.w400,
-                                fontSize: 16,
-                              ),
-                            ),
-                            SizedBox(width: 4),
-                            Image.asset(
-                              Assets.app_assetsIconsOfficialTag,
-                              scale: 4,
-                            ),
-                            SizedBox(width: 6),
-                            AnimatedOpacity(
-                              opacity: controller.isMute ? 1 : 0,
-                              duration: Duration(milliseconds: 400),
-                              child: Image.asset(
-                                Assets.app_assetsIconsChatMuteIcon,
-                                width: 12,
-                                height: 12,
-                              ),
-                            ),
-                            SizedBox(width: 4),
-                          ],
-                        ),
-                  SizedBox(height: 2),
-                  if (!controller.isOfficial)
-                    Row(
-                      children: [
-                        Expanded(
-                          child: AnimatedCrossFade(
-                            crossFadeState: controller.isPartycipateTyping ||
-                                    controller.isPartycipateSending ||
-                                    controller.isPartycipateReceiveReconding
-                                ? CrossFadeState.showFirst
-                                : CrossFadeState.showSecond,
-                            duration: Duration(milliseconds: 400),
-                            firstChild: _switchEventType(),
-                            secondChild: AnimatedContainer(
-                              duration: Duration(milliseconds: 400),
-                              padding: EdgeInsets.symmetric(
-                                vertical: 4,
-                                horizontal: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: controller.isOnline
-                                    ? Colors.green.shade100
-                                    : Colors.grey.shade200,
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: controller.isShowOffline
-                                  ? Text(
-                                      'offline'.tr,
-                                      style: TextStyle(
-                                          color: Color(0xff787878),
-                                          fontWeight: FontWeight.w400,
-                                          fontSize: 10,
-                                          overflow: TextOverflow.ellipsis),
-                                      maxLines: 1,
-                                    )
-                                  : _checkOnlineStatus(
-                                      controller.isOnline,
-                                      controller.lastOnlineAt,
-                                    ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
-          ),
+                width: 40,
+                height: 40,
+                padding: const EdgeInsets.only(left: 8),
+                color: Colors.transparent,
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.arrow_back_ios,
+                  color: AppColors.seconderyColor,
+                  size: 20,
+                ))),
+        WidgetBindingProfileRadius(
+          borderRadius: 20,
+          size: 40,
+          avatarUrl: controller.avatar,
+          isActive: controller.isOnline,
         ),
-        /*
-        Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(50.0),
+        const SizedBox(width: 12),
+        const Spacer(),
+        SizedBox(
+          width: 40,
           child: InkWell(
-            onTap: controller.onPersonalAudioCall,
-            child: Container(
-              padding: EdgeInsets.only(),
-              alignment: Alignment.center,
-              child: Image.asset(
-                Assets.app_assetsIconsIcPhoneCall,
-                width: 24,
-                height: 24,
-              ),
-            ),
-          ),
-        ),
-        SizedBox(width: 10),
-        Material(
-          color: Colors.transparent,
-          borderRadius: BorderRadius.circular(50.0),
-          child: InkWell(
-            onTap: () {
-              /*
-              Get.to(
-                () => VideoCallScreen(),
-                transition: Transition.fadeIn,
-              );
-              */
+            onTap: () async {
+              _showConformClearChatHistory();
             },
-            child: Container(
-              alignment: Alignment.center,
-              child: Image.asset(
-                Assets.app_assetsIconsTurnOnVideo,
-                width: 28,
-                height: 28,
-                color: AppColors.buttonVideoBackground,
-              ),
+            child: Image.asset(
+              "packages/chatmesdk/assets/icons/icon_trash.png",
+              width: 20,
+              height: 20,
             ),
-          ),
-        ),
-        */
-        Container(
-          color: Colors.transparent,
-          width: 45,
-          child: MessagePopupButton(
-            pressType: PressType.tap,
-            isShowArrow: false,
-            direction: PopupDirection.top,
-            offset: Offset(0, -10),
-            child: Icon(Icons.more_vert, color: Colors.black),
-            builder: (context, onClose) {
-              return Material(
-                elevation: 2,
-                child: FittedBox(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.max,
-                    children: [
-                      PopupMenuItem<MenuOptionItem>(
-                        value: MenuOptionItem.mute,
-                        child: InkWell(
-                          onTap: () {
-                            onClose();
-                            onMuteChat();
-                          },
-                          child: SizedBox(
-                            width: 120,
-                            child: controller.isMute
-                                ? popMenuItem(
-                                    Assets.app_assetsIconsChatMuteIcon,
-                                    'ummute')
-                                : popMenuItem(
-                                    Assets.app_assetsIconsChatUnmuteIcon,
-                                    'mute'),
-                          ),
-                        ),
-                      ),
-                      PopupMenuItem<MenuOptionItem>(
-                        value: MenuOptionItem.report,
-                        child: InkWell(
-                            onTap: () {
-                              onClose();
-                              onReport();
-                            },
-                            child: popMenuItem(
-                                Assets.app_assetsIconsIconInfo, 'report')),
-                      ),
-                      PopupMenuItem<MenuOptionItem>(
-                        value: MenuOptionItem.delete,
-                        child: InkWell(
-                          onTap: () {
-                            onClose();
-                            _showConformClearChatHistory();
-                          },
-                          child: popMenuItem(
-                              Assets.app_assetsIconsIconTrash, 'clear_chat'),
-                        ),
-                      ),
-                      Container(
-                        alignment: Alignment.topCenter,
-                        padding: EdgeInsets.only(top: 6.0, bottom: 8.0),
-                        height: 48.0,
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () {
-                            onClose();
-                            Get.toNamed(
-                              Routes.search_chat_message,
-                              arguments: [controller.roomId, false],
-                            );
-                          },
-                          child: Row(
-                            children: [
-                              SizedBox(width: 20.0),
-                              Image.asset(
-                                Assets.app_assetsIconsHomeSearchButton,
-                                width: 20.0,
-                                height: 20.0,
-                              ),
-                              SizedBox(width: 6.0),
-                              Text(
-                                'search'.tr,
-                                style: TextStyle(fontSize: 16.0),
-                              ),
-                            ],
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              );
-            },
           ),
         ),
       ],
@@ -371,7 +98,7 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
             ),
           ),
         ),
-        Spacer(),
+        const Spacer(),
         InkWell(
           onTap: _showMulitSelectDialogOption,
           child: Padding(
@@ -390,7 +117,7 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
   Widget buildTotalReadCount(ChatRoomController controller) {
     if (controller.totalMessageUnreadCount > 0) {
       return CircleAvatar(
-        backgroundColor: Color(0xffCD2525),
+        backgroundColor: const Color(0xffCD2525),
         radius: 9,
         child: FittedBox(
           child: Padding(
@@ -398,24 +125,24 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
             child: Text(
               controller.totalMessageUnreadCount.toString(),
               textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFFFDFFFD)),
+              style: const TextStyle(color: Color(0xFFFDFFFD)),
             ),
           ),
         ),
       );
     } else {
-      return Offstage();
+      return const Offstage();
     }
   }
 
   Widget _checkOnlineStatus(bool isOnline, String lastOnline) {
     if (lastOnline == '') {
-      return SizedBox(width: 90);
+      return const SizedBox(width: 90);
     }
     if (isOnline) {
       return Text(
         'online'.tr,
-        style: TextStyle(
+        style: const TextStyle(
           color: AppColors.primaryColor,
           fontWeight: FontWeight.w400,
           fontSize: 10,
@@ -423,10 +150,8 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
       );
     }
     return Text(
-      'last_online_at'.tr +
-          ' ' +
-          MessageHelper.messageOnlineDateTimeFormat(lastOnline),
-      style: TextStyle(
+      '${'last_online_at'.tr} ${MessageHelper.messageOnlineDateTimeFormat(lastOnline)}',
+      style: const TextStyle(
         color: Color(0xff787878),
         fontWeight: FontWeight.w400,
         fontSize: 10,
@@ -434,19 +159,8 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
     );
   }
 
-  Widget popMenuItem(String icon, String text) => Container(
-        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 2),
-        child: Row(
-          children: [
-            Image.asset(icon, scale: 4),
-            const SizedBox(width: 8),
-            Text(text.tr),
-          ],
-        ),
-      );
-
   Widget _switchEventType() {
-    final _textStyle = TextStyle(
+    const textStyle = TextStyle(
       color: Colors.green,
       fontWeight: FontWeight.w400,
       fontSize: 12,
@@ -455,10 +169,10 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
         ? Row(
             children: [
               Image.asset(Assets.app_assetsIconsVoiceRecording, width: 16),
-              SizedBox(width: 4),
+              const SizedBox(width: 4),
               Text(
                 'recording'.tr,
-                style: _textStyle,
+                style: textStyle,
               )
             ],
           )
@@ -468,18 +182,15 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
                 : controller.isPartycipateSending
                     ? 'sending_file...'.tr
                     : '',
-            style: _textStyle,
+            style: textStyle,
           );
   }
 
   void _onBack() {
-    Get.back();
-    ChatHelper.onTrackRoomOFF();
+    Navigator.pop(context);
   }
 
-  void onMuteChat() {
-    controller.onMuteChat();
-  }
+  void onMuteChat() {}
 
   void onClearChat() {
     controller.onClearChat();
@@ -502,22 +213,15 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
     controller.onMulitDelete();
   }
 
-  void _navigateToViewProfile(String? _profileUrl) {
-    Get.to(() => ViewProfilePhotos(url: _profileUrl ?? ''),
-        transition: Transition.fadeIn, duration: Duration(milliseconds: 200));
-  }
-
   void _showMulitSelectDialogOption() async {
-    var _isHaveMessageSelected = controller.listMessage
-        .where((element) => element.isSelect == true)
-        .toList();
-    if (_isHaveMessageSelected.isEmpty) return;
+    var isHaveMessageSelected = controller.listMessage.where((element) => element.isSelect == true).toList();
+    if (isHaveMessageSelected.isEmpty) return;
     await showModalBottomSheet(
       backgroundColor: Colors.transparent,
       isScrollControlled: false,
       context: context,
       builder: (BuildContext context) => Container(
-        margin: EdgeInsets.only(bottom: 25, left: 16, right: 16),
+        margin: const EdgeInsets.only(bottom: 25, left: 16, right: 16),
         child: ListView(
           shrinkWrap: true,
           children: [
@@ -527,7 +231,7 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
               child: Container(
                 height: 60,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(4),
@@ -536,7 +240,7 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
                 ),
                 child: Text(
                   'delete'.tr,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: AppColors.red,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -544,7 +248,7 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
                 ),
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             InkWell(
               onTap: () {
                 Navigator.pop(context);
@@ -552,7 +256,7 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
               child: Container(
                 height: 60,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(4),
@@ -561,7 +265,7 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
                 ),
                 child: Text(
                   'cancel'.tr,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.blue,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -575,8 +279,8 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
     );
   }
 
-  void _showConformClearChatHistory() async {
-    return await showCupertinoDialog(
+  Future _showConformClearChatHistory() {
+    return showCupertinoDialog(
         context: context,
         barrierDismissible: true,
         builder: (ctx) {
@@ -599,7 +303,7 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
                           child: Text(
                             'do_you_want_to_clear_all_messages?'.tr,
                             textAlign: TextAlign.center,
-                            style: TextStyle(
+                            style: const TextStyle(
                               color: AppColors.seconderyColor,
                               fontWeight: FontWeight.w400,
                               fontSize: 13.3,
@@ -612,12 +316,10 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
                           Container(
                             width: 150,
                             alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              border: const Border(
-                                top: BorderSide(
-                                    color: Color(0xFFD6D6D6), width: 1),
-                                right: BorderSide(
-                                    color: Color(0xFFD6D6D6), width: 1),
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: Color(0xFFD6D6D6), width: 1),
+                                right: BorderSide(color: Color(0xFFD6D6D6), width: 1),
                               ),
                             ),
                             child: TextButton(
@@ -633,18 +335,16 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
                           Container(
                             width: 150,
                             alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              border: const Border(
-                                top: BorderSide(
-                                    color: Color(0xFFD6D6D6), width: 1),
-                                left: BorderSide(
-                                    color: Color(0xFFD6D6D6), width: 1),
+                            decoration: const BoxDecoration(
+                              border: Border(
+                                top: BorderSide(color: Color(0xFFD6D6D6), width: 1),
+                                left: BorderSide(color: Color(0xFFD6D6D6), width: 1),
                               ),
                             ),
                             child: TextButton(
                               child: Text(
                                 'clear'.tr,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: AppColors.red,
                                   fontWeight: FontWeight.w400,
                                   fontSize: 16,

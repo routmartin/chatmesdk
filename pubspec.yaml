@@ -10,16 +10,16 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  sound_stream:
-    git:
-      url: https://github.com/routmartin/flutter-sound-stream.git
-      ref: 9a8b693
+  # sound_stream:
+  #   git:
+  #     url: https://github.com/routmartin/flutter-sound-stream.git
+  #     ref: 9a8b693
   assets_audio_player: ^3.0.6
   audio_session: ^0.1.18
   audio_waveforms: ^1.0.4
   azlistview: ^2.0.0
   cached_network_image: ^3.3.1
-  catcher: 0.7.0
+  # catcher: 0.7.0
   collection: 1.17.1
   connectivity_plus: ^2.3.9
   country_dial_code: ^1.2.0
@@ -29,6 +29,7 @@ dependencies:
   custom_timer: ^0.2.3
   debounce_builder: ^0.9.0
   device_info_plus: ^7.0.0
+  dio: ^5.4.0
   draggable_widget: ^2.0.0
   easy_debounce: ^2.0.3
   file_picker: ^5.2.7
@@ -50,10 +51,11 @@ dependencies:
   grouped_list: ^5.1.2
   http_parser: ^4.0.2
   image_cropper: ^3.0.1
-  image_gallery_saver: ^1.7.1
+  # image_gallery_saver: ^1.7.1
   image_picker: ^0.8.6+2
   intl: ^0.17.0
   link_preview_generator: ^1.1.0
+  # mime: ^1.0.5
   mno_zoom_widget: ^0.1.0
   modal_bottom_sheet: ^3.0.0-pre
   moment_dart: ^0.17.4
@@ -86,3 +88,22 @@ flutter:
     platforms:
       some_platform:
         pluginClass: somePluginClass
+  assets:
+    - packages/chatmesdk/assets/icons/group_people.png
+    - packages/chatmesdk/assets/icons/insert_emoji.png
+    - packages/chatmesdk/assets/icons/my_pofile_avatar.png
+    - packages/chatmesdk/assets/icons/icon_keyboard.png
+    - packages/chatmesdk/assets/icons/icon_reconder.png
+    - packages/chatmesdk/assets/icons/icon_gallery.png
+    - packages/chatmesdk/assets/icons/icon_camera.png
+    - packages/chatmesdk/assets/icons/icon_close.png
+    - packages/chatmesdk/assets/icons/icon_plus.png
+    - packages/chatmesdk/assets/icons/profile_forward_button.png
+    - packages/chatmesdk/assets/icons/icon_trash.png
+    - packages/chatmesdk/assets/icons/reply_icon.png
+    - packages/chatmesdk/assets/icons/profile_close_circle-button.png
+
+  # fonts:
+  #   - family: PingFang
+  #     fonts:
+  #       - asset: packages/chatmesdk/src/fonts/PingFang.ttf

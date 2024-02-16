@@ -7,13 +7,15 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
-
-import '../../data/api_helper/storage_token.dart';
 import '../theme/app_color.dart';
 import 'method_channel_helper.dart';
 
 mixin MessageVoiceHelper {
-  late final RecorderController recorderController;
+  final RecorderController recorderController = RecorderController()
+    ..androidEncoder = AndroidEncoder.aac
+    ..androidOutputFormat = AndroidOutputFormat.mpeg4
+    ..iosEncoder = IosEncoder.kAudioFormatMPEG4AAC
+    ..sampleRate = 44100;
   final PlayerController playController = PlayerController();
   String? path;
   String? musicFile;
@@ -28,13 +30,7 @@ mixin MessageVoiceHelper {
   }
 
   void initReconderController() {
-    if (!StorageToken.isAccessTokenExist()) return;
     _getDir();
-    recorderController = RecorderController()
-      ..androidEncoder = AndroidEncoder.aac
-      ..androidOutputFormat = AndroidOutputFormat.mpeg4
-      ..iosEncoder = IosEncoder.kAudioFormatMPEG4AAC
-      ..sampleRate = 44100;
   }
 
   Widget voiceRecorder(bool isCancelled) {

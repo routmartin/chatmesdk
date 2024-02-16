@@ -85,7 +85,7 @@ class ChatRoomModel {
         statusOnline: json['isOnline'] ?? false,
         isCalling: json['isCalling'] ?? false,
         callId: json['callId'] ?? '',
-        draft: json['draft'] == null ? null : Draft.fromJson(json['draft']),
+        draft: json['draft'] == null ? null : Draft.fromMap(json['draft']),
         lastMessage: json['lastMessage'] == null ? null : LastMessage.fromJson(json['lastMessage']),
         whoRecording:
             ((json['recording'] as List?)?.isEmpty ?? true) ? [] : [(json['recording'] as List).first['name']],
@@ -194,7 +194,7 @@ class Sender {
   String? profileId;
 
   factory Sender.fromJson(Map<String, dynamic> json) => Sender(
-        id: json['_id'] ?? '',
+        id: json['merchantUserId'] ?? '',
         accountId: json['accountId'] ?? '',
         avatar: json['avatar'] ?? '',
         name: json['name'] ?? '',

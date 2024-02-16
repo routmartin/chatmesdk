@@ -3,35 +3,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:chatme/data/add_friend/controller/add_friend_by_search_controller.dart';
-import 'package:chatme/data/chat_room/chat_room_controller.dart';
-import 'package:chatme/data/chat_room/chat_room_message_controller.dart';
-import 'package:chatme/data/chat_room/model/attachment_model.dart';
-import 'package:chatme/data/chat_room/model/message_response_model.dart';
-import 'package:chatme/data/group_room/group_message_controller.dart';
-import 'package:chatme/data/profile/controller/account_user_profile_controller.dart';
-import 'package:chatme/data/sticker_controlller/sticker_controller.dart';
-import 'package:chatme/routes/app_routes.dart';
-import 'package:chatme/template/chat_screen/chat_room/chat_room_forward_screen.dart';
-import 'package:chatme/template/chat_screen/chat_room/chat_room_view_media_screen.dart';
-import 'package:chatme/template/chat_screen/chat_room/view_file_screen.dart';
-import 'package:chatme/template/chat_screen/chat_room/widget/message_popup_button.dart';
-import 'package:chatme/util/constant/app_asset.dart';
-import 'package:chatme/util/helper/cache_mananger_helper.dart';
-import 'package:chatme/util/helper/chat_helper.dart';
-import 'package:chatme/util/helper/date_time.dart';
-import 'package:chatme/util/helper/media_helper.dart';
-import 'package:chatme/util/helper/message_helper.dart';
-import 'package:chatme/util/helper/message_upload_helper.dart';
-import 'package:chatme/util/helper/util.dart';
-import 'package:chatme/util/text_style.dart';
-import 'package:chatme/widgets/cupertino/icon_dialog.dart';
-import 'package:chatme/widgets/custom_button/custom_button2.dart';
-import 'package:chatme/widgets/fair_binding_widget/widget_binding_profile_radius.dart';
-import 'package:chatme/widgets/fair_binding_widget/widget_binding_selection.dart';
-import 'package:chatme/widgets/highlight_text.dart';
-import 'package:chatme/widgets/loading/base_dialog_loading.dart';
-import 'package:chatme/widgets/voice_chat_widget.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -43,24 +15,46 @@ import 'package:mime/mime.dart';
 import 'package:video_thumbnail/video_thumbnail.dart';
 import 'package:dio/dio.dart' as dio;
 
+import '../../../../data/chat_room/chat_room.dart';
+import '../../../../data/chat_room/model/attachment_model.dart';
+import '../../../../data/chat_room/model/message_response_model.dart';
+import '../../../../data/sticker_controlller/sticker_controller.dart';
+import '../../../../util/constant/app_assets.dart';
+import '../../../../util/helper/cache_mananger_helper.dart';
+import '../../../../util/helper/chat_helper.dart';
+import '../../../../util/helper/font_util.dart';
 import '../../../../util/helper/link_helper.dart';
+import '../../../../util/helper/media_helper.dart';
+import '../../../../util/helper/message_helper.dart';
+import '../../../../util/helper/message_upload_helper.dart';
+import '../../../../util/helper/util.dart';
+import '../../../../util/text_style.dart';
+import '../../../../util/theme/app_color.dart';
+import '../../../widget/base_share_widget.dart';
+import '../../../widget/custom_button.dart';
+import '../../../widget/highlight_text.dart';
+import '../../../widget/widget_binding_profile_radius.dart';
+import '../chat_room_view_media_screen.dart';
+import '../view_file_screen.dart';
+import 'message_popup_button.dart';
+import 'message_type_voice.dart';
 
 class MessageItem extends StatefulWidget {
   final MessageModel message;
-  final isMulitSelect;
+  final bool isMulitSelect;
   final String accountId;
   final bool isLastMessage;
   final bool isGroup;
   final bool isAnimatedPin;
   final bool isAnimatedMessage;
 
-  MessageItem({
+  const MessageItem({
     Key? key,
     required this.message,
     required this.accountId,
     required this.isGroup,
     this.isLastMessage = false,
-    this.isMulitSelect,
+    this.isMulitSelect = false,
     this.isAnimatedPin = false,
     this.isAnimatedMessage = false,
   }) : super(key: key);
@@ -130,7 +124,7 @@ class _MessageItemState extends State<MessageItem> {
       setState(() {
         animatedPinIcon = animatedPinIcon == 1 ? 1.5 : 1;
       });
-      await Future.delayed(Duration(milliseconds: 200));
+      await Future.delayed(const Duration(milliseconds: 200));
     }
   }
 
@@ -139,7 +133,7 @@ class _MessageItemState extends State<MessageItem> {
       setState(() {
         animatedMessageOpacity = animatedMessageOpacity == 1 ? 0 : 1;
       });
-      await Future.delayed(Duration(milliseconds: 200));
+      await Future.delayed(const Duration(milliseconds: 200));
     }
   }
 
@@ -167,12 +161,11 @@ class _MessageItemState extends State<MessageItem> {
   }
 
   dynamic _checkIfMessageInGroup() {
-    if (widget.isGroup) return Get.find<GroupMessageController>();
     return Get.find<ChatRoomMessageController>();
   }
 
   void _onTapOnReplyMessage() async {
-    dynamic controller = widget.isGroup ? Get.find<GroupMessageController>() : Get.find<ChatRoomMessageController>();
+    dynamic controller = Get.find<ChatRoomMessageController>();
     List<MessageModel> reversedList = List.from(controller.listMessage.reversed);
     controller.indexMessageForScroll = reversedList.indexWhere((element) => element.id == widget.message.ref!.id);
     controller.update();
@@ -195,7 +188,7 @@ class _MessageItemState extends State<MessageItem> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.only(
+      padding: const EdgeInsets.only(
         left: 15,
         bottom: 16,
       ),
@@ -216,11 +209,11 @@ class _MessageItemState extends State<MessageItem> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        WidgetBindngSelection(
-          isWidgetShow: widget.isMulitSelect,
-          isSelected: widget.message.isSelect!,
-          onChanged: () => _onRadioButtonSelect(widget.message.id),
-        ),
+        // WidgetBindngSelection(
+        //   isWidgetShow: widget.isMulitSelect,
+        //   isSelected: widget.message.isSelect!,
+        //   onChanged: () => _onRadioButtonSelect(widget.message.id),
+        // ),
         _buildMessageSwitcher(),
       ],
     );
@@ -237,8 +230,6 @@ class _MessageItemState extends State<MessageItem> {
         return Expanded(child: Row(children: [_buildUnsentMessage(isLeftMessage: true)]));
       case 'reply':
         return _buildLeftReplyMessage();
-      case 'forward':
-        return _buildLeftForwardMessage();
       case 'message':
       default:
         return _buildLeftMessageWidget();
@@ -247,7 +238,7 @@ class _MessageItemState extends State<MessageItem> {
 
   Widget leftMessageUserName() {
     if (!widget.isGroup) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
     return Padding(
       padding: const EdgeInsets.only(
@@ -256,7 +247,7 @@ class _MessageItemState extends State<MessageItem> {
       ),
       child: Text(
         widget.message.sender?.name ?? '',
-        style: TextStyle(color: Color(0xFF787878), fontSize: 12),
+        style: const TextStyle(color: Color(0xFF787878), fontSize: 12),
       ),
     );
   }
@@ -301,14 +292,11 @@ class _MessageItemState extends State<MessageItem> {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              InkWell(
-                onTap: () => _navigateToViewContact(widget.message.sender!.profileId!),
-                child: WidgetBindingProfileRadius(
-                  borderRadius: 8,
-                  size: 40,
-                  avatarUrl: widget.message.sender!.avatar ?? '',
-                  isActive: false,
-                ),
+              WidgetBindingProfileRadius(
+                borderRadius: 8,
+                size: 40,
+                avatarUrl: widget.message.sender!.avatar ?? '',
+                isActive: false,
               ),
               Expanded(
                 child: Row(
@@ -316,7 +304,7 @@ class _MessageItemState extends State<MessageItem> {
                   children: [
                     Flexible(
                       child: Padding(
-                        padding: EdgeInsets.only(left: 6),
+                        padding: const EdgeInsets.only(left: 6),
                         child: MessagePopupButton(
                           direction: PopupDirection.top,
                           offset: Offset.zero,
@@ -355,7 +343,7 @@ class _MessageItemState extends State<MessageItem> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Image.asset(
-                      Assets.app_assetsIconsReplyIcon,
+                      "packages/chatmesdk/assets/icons/reply_icon.png",
                       width: 12,
                       height: 12,
                     ),
@@ -364,15 +352,15 @@ class _MessageItemState extends State<MessageItem> {
                       child: Row(
                         children: [
                           Text(
-                            widget.message.sender!.name! + ' ',
-                            style: TextStyle(
+                            '${widget.message.sender!.name!} ',
+                            style: const TextStyle(
                               fontSize: 13.3,
                               color: Color(0xffACACAC),
                             ),
                           ),
                           Text(
-                            'replied_to'.tr + ' ',
-                            style: TextStyle(
+                            '${'replied_to'.tr} ',
+                            style: const TextStyle(
                               fontSize: 13.3,
                               color: Color(0xffACACAC),
                             ),
@@ -388,14 +376,14 @@ class _MessageItemState extends State<MessageItem> {
                           : widget.isGroup
                               ? widget.message.ref?.sender?.name ?? ''
                               : 'themself'.tr,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13.3,
                         color: Color(0xffACACAC),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 InkWell(
                   onTap: _onTapOnReplyMessage,
                   child: Opacity(
@@ -403,7 +391,7 @@ class _MessageItemState extends State<MessageItem> {
                       child: Stack(
                         children: [
                           _checkLeftReplyMessageType(isForwardRef ? widget.message.ref?.ref : widget.message.ref),
-                          Positioned.fill(
+                          const Positioned.fill(
                               child: ColoredBox(
                             color: Colors.transparent,
                           ))
@@ -411,26 +399,23 @@ class _MessageItemState extends State<MessageItem> {
                       )),
                 ),
                 Transform.translate(
-                  offset: Offset(0, -3),
+                  offset: const Offset(0, -3),
                   child: Row(
                       mainAxisAlignment: MainAxisAlignment.start,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        InkWell(
-                          onTap: () => _navigateToViewContact(widget.message.sender!.profileId!),
-                          child: WidgetBindingProfileRadius(
-                            borderRadius: 8,
-                            size: 40,
-                            avatarUrl: widget.message.sender!.avatar ?? '',
-                            isActive: false,
-                          ),
+                        WidgetBindingProfileRadius(
+                          borderRadius: 8,
+                          size: 40,
+                          avatarUrl: widget.message.sender!.avatar ?? '',
+                          isActive: false,
                         ),
                         Flexible(
                           child: MessagePopupButton(
                             direction: PopupDirection.top,
                             offset: Offset.zero,
                             child: Padding(
-                              padding: EdgeInsets.only(left: 6),
+                              padding: const EdgeInsets.only(left: 6),
                               child: _animatedOpacityWidget(_checkLeftMessageType(widget.message)),
                             ),
                             builder: (context, onClose) {
@@ -450,109 +435,20 @@ class _MessageItemState extends State<MessageItem> {
     );
   }
 
-  Widget _buildLeftForwardMessage() {
-    return Expanded(
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.start,
-        children: [
-          Visibility(
-            visible: _checkIfSentFaild(),
-            child: Image.asset(
-              Assets.app_assetsIconsExclamationmark,
-              width: 20,
-              height: 20,
-              scale: 2,
-            ),
-          ),
-          Flexible(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      Assets.app_assetsIconsForwardIcon,
-                      width: 12,
-                      height: 12,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Text(
-                        'forwarded_from'.tr,
-                        style: TextStyle(color: Color(0xffACACAC)),
-                      ),
-                    ),
-                    Text(
-                      widget.message.ref!.sender!.name!,
-                      style: TextStyle(
-                        color: Color(0xffACACAC),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: 10),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    leftMessageUserName(),
-                    Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          InkWell(
-                            onTap: () => _navigateToViewContact(
-                              widget.message.sender!.profileId!,
-                            ),
-                            child: WidgetBindingProfileRadius(
-                              borderRadius: 8,
-                              size: 40,
-                              avatarUrl: widget.message.sender!.avatar ?? '',
-                              isActive: false,
-                            ),
-                          ),
-                          Flexible(
-                            child: Padding(
-                              padding: EdgeInsets.only(left: 6),
-                              child: MessagePopupButton(
-                                direction: PopupDirection.top,
-                                offset: Offset.zero,
-                                child: _animatedOpacityWidget(_checkLeftMessageType(widget.message.ref!)),
-                                builder: (context, onClose) {
-                                  return Material(
-                                      elevation: 0.01, child: FittedBox(child: _buildLongPressMenu(false, onClose)));
-                                },
-                              ),
-                            ),
-                          ),
-                          _pinIconWidget(true),
-                        ]),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _checkLeftMessageType(MessageModel messageModel) {
     switch (messageModel.type) {
       case 'text':
         if (MessageHelper.messageEmojiTwo(messageModel.message!)) {
           return Text(
             messageModel.message!,
-            style: TextStyle(fontSize: 40),
+            style: const TextStyle(fontSize: 40),
           );
         }
         return Container(
-          padding: EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
           constraints: BoxConstraints(maxWidth: Get.width * .66),
           decoration: BoxDecoration(
-            color: Color(0xffe4e6eb),
+            color: const Color(0xffe4e6eb),
             borderRadius: BorderRadius.circular(8),
           ),
           child: MessageHelper.messageTextParser(
@@ -560,7 +456,7 @@ class _MessageItemState extends State<MessageItem> {
             AppTextStyle.smallTextRegularBlack,
             messageModel.mentions,
             false,
-            onClickMention: (id) => _onMentionClick(id),
+            onClickMention: (id) {},
             mentionStyle: AppTextStyle.chatTextBoldBlack,
           ),
         );
@@ -569,15 +465,13 @@ class _MessageItemState extends State<MessageItem> {
           path: messageModel.attachments!.first.url!,
           isSender: false,
         );
-      // return VoiceMessageWidget(
-      //     urlPath: messageModel.attachments!.first.url!, isSender: false);
       case 'html':
         return Container(
-          constraints: BoxConstraints(minWidth: 100),
-          padding: EdgeInsets.all(10),
-          margin: EdgeInsets.symmetric(horizontal: 8),
+          constraints: const BoxConstraints(minWidth: 100),
+          padding: const EdgeInsets.all(10),
+          margin: const EdgeInsets.symmetric(horizontal: 8),
           decoration: BoxDecoration(
-            color: Color(0xffe4e6eb),
+            color: const Color(0xffe4e6eb),
             borderRadius: BorderRadius.circular(8),
           ),
           child: HtmlWidget(
@@ -627,9 +521,9 @@ class _MessageItemState extends State<MessageItem> {
                     isWithMessage: true,
                   ),
                   Container(
-                    padding: EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(10),
                     width: leftMediaWidthSize - MediaQuery.of(context).size.width * 0.12,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Color(0xffe4e6eb),
                     ),
                     child: Text(
@@ -660,91 +554,63 @@ class _MessageItemState extends State<MessageItem> {
           widget: widget,
           isRightMessage: false,
         );
-      case 'vows':
-        return MessageCallWidget(
-          call: messageModel.call,
-        );
+
       default:
-        return SizedBox();
+        return const SizedBox();
     }
   }
 
-  Widget _checkLeftReplyMessageType(MessageModel? _ref) {
-    switch (_ref!.type) {
+  Widget _checkLeftReplyMessageType(MessageModel? ref) {
+    switch (ref!.type) {
       case 'text':
         return Container(
-          padding: EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
           constraints: BoxConstraints(maxWidth: Get.width * .65),
           decoration: BoxDecoration(
-            color: Color(0xffe4e6eb),
+            color: const Color(0xffe4e6eb),
             borderRadius: BorderRadius.circular(8),
           ),
           child: MessageHelper.messageTextParser(
-            _ref.message ?? '',
+            ref.message ?? '',
             AppTextStyle.smallTextRegularBlack,
-            _ref.mentions,
+            ref.mentions,
             true,
-            onClickMention: (id) => _onMentionClick(id),
+            onClickMention: (id) {},
             mentionStyle: AppTextStyle.chatTextBoldBlack,
           ),
         );
       case 'voice':
         return Container(
           constraints: BoxConstraints(maxWidth: Get.width * .7),
-          padding: EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Color(0xffF3F3F3),
+            color: const Color(0xffF3F3F3),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text('<<${'voice'.tr}>>'),
         );
       case 'link':
         return MessageUrlContainer(
-          url: _ref.message!,
+          url: ref.message!,
           isReply: true,
           isLeftMessage: false,
         );
       case 'sticker':
         return MessageStickerContainer(
           isGroup: widget.isGroup,
-          url: _ref.sticker!.url!,
-          groupId: _ref.sticker!.groupId ?? '',
+          url: ref.sticker!.url!,
+          groupId: ref.sticker!.groupId ?? '',
         );
       case 'contact':
         return MessageShareContactReplyCard(
           isleftMessage: true,
-          shareContact: _ref.shareContact!,
+          shareContact: ref.shareContact!,
         );
       case 'media':
-        // if (_ref.message!.isNotEmpty) {
-        //   return ClipRRect(
-        //     borderRadius: BorderRadius.circular(8),
-        //     child: Column(
-        //       crossAxisAlignment: CrossAxisAlignment.start,
-        //       children: [
-        //         MessageReplyMedia(
-        //           isLeftMessage: true,
-        //           urlPath: _ref.attachments![0].url!,
-        //           isDropped: _ref.attachments![0].isDropped ?? false,
-        //         ),
-        //         Container(
-        //           padding: const EdgeInsets.all(12.0),
-        //           color: Color(0xffe4e6eb),
-        //           width: Get.width / 2.4,
-        //           child: Text(
-        //             widget.message.message!,
-        //             textAlign: TextAlign.left,
-        //             style: AppTextStyle.chatTextBlack,
-        //           ),
-        //         )
-        //       ],
-        //     ),
-        //   );
-        // }
         return MessageReplyMedia(
           isLeftMessage: true,
-          urlPath: _ref.attachments![0].url!,
-          isDropped: _ref.attachments![0].isDropped ?? false,
+          urlPath: ref.attachments![0].url!,
+          isDropped: ref.attachments![0].isDropped ?? false,
         );
       case 'file':
         return MessageSendFileCard(
@@ -752,12 +618,8 @@ class _MessageItemState extends State<MessageItem> {
           isRightMessage: false,
           isReplyMessage: true,
         );
-      case 'vows':
-        return MessageCallWidget(
-          call: _ref.call,
-        );
       default:
-        return SizedBox();
+        return const SizedBox();
     }
   }
 
@@ -841,7 +703,7 @@ class _MessageItemState extends State<MessageItem> {
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     Image.asset(
-                      Assets.app_assetsIconsReplyIcon,
+                      "packages/chatmesdk/assets/icons/reply_icon.png",
                       width: 12,
                       height: 12,
                     ),
@@ -850,15 +712,15 @@ class _MessageItemState extends State<MessageItem> {
                       child: Row(
                         children: [
                           Text(
-                            'you'.tr + ' ',
-                            style: TextStyle(
+                            '${'you'.tr} ',
+                            style: const TextStyle(
                               fontSize: 13.3,
                               color: Color(0xffACACAC),
                             ),
                           ),
                           Text(
                             'replied_to'.tr,
-                            style: TextStyle(
+                            style: const TextStyle(
                               fontSize: 13.3,
                               color: Color(0xffACACAC),
                             ),
@@ -868,14 +730,14 @@ class _MessageItemState extends State<MessageItem> {
                     ),
                     Text(
                       _checkIfMessageReplyByMe() ? 'yourself'.tr : widget.message.ref!.sender!.name!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13.3,
                         color: Color(0xffACACAC),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 InkWell(
                   onTap: _onTapOnReplyMessage,
                   child: Opacity(
@@ -883,7 +745,7 @@ class _MessageItemState extends State<MessageItem> {
                     child: Stack(
                       children: [
                         _checkRightReplyMessageType(isForwardRef ? widget.message.ref?.ref : widget.message.ref),
-                        Positioned.fill(
+                        const Positioned.fill(
                           child: ColoredBox(
                             color: Colors.transparent,
                           ),
@@ -893,7 +755,7 @@ class _MessageItemState extends State<MessageItem> {
                   ),
                 ),
                 Transform.translate(
-                  offset: Offset(0, -3),
+                  offset: const Offset(0, -3),
                   child: Row(
                       mainAxisAlignment: MainAxisAlignment.end,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -953,19 +815,19 @@ class _MessageItemState extends State<MessageItem> {
                       padding: const EdgeInsets.symmetric(horizontal: 6),
                       child: Text(
                         'forwarded_from'.tr,
-                        style: TextStyle(color: Color(0xffACACAC)),
+                        style: const TextStyle(color: Color(0xffACACAC)),
                       ),
                     ),
                     Text(
                       widget.message.ref?.sender?.name ?? '',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13.3,
                         color: Color(0xffACACAC),
                       ),
                     ),
                   ],
                 ),
-                SizedBox(height: 10),
+                const SizedBox(height: 10),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -995,11 +857,11 @@ class _MessageItemState extends State<MessageItem> {
         if (MessageHelper.messageEmojiTwo(messageModel.message!)) {
           return Text(
             messageModel.message!,
-            style: TextStyle(fontSize: 40),
+            style: const TextStyle(fontSize: 40),
           );
         }
         return Container(
-          padding: EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
           constraints: BoxConstraints(maxWidth: Get.width * .7),
           decoration: BoxDecoration(
             color: AppColors.primaryColor,
@@ -1010,7 +872,7 @@ class _MessageItemState extends State<MessageItem> {
             AppTextStyle.smallTextMediumWhite,
             messageModel.mentions,
             false,
-            onClickMention: (id) => _onMentionClick(id),
+            onClickMention: (id) {},
             mentionStyle: AppTextStyle.chatTextBoldWhite,
           ),
         );
@@ -1026,8 +888,6 @@ class _MessageItemState extends State<MessageItem> {
           isSender: true,
           uploadPath: messageModel.attachments?.first.uploadPath,
         );
-      // return VoiceMessageWidget(
-      //     urlPath: messageModel.attachments!.first.url!, isSender: true);
       case 'sticker':
         return MessageStickerContainer(
           isGroup: widget.isGroup,
@@ -1091,91 +951,60 @@ class _MessageItemState extends State<MessageItem> {
           widget: widget,
           isRightMessage: true,
         );
-      case 'vows':
-        return MessageCallWidget(
-          call: messageModel.call,
-        );
 
       default:
-        return SizedBox();
+        return const SizedBox();
     }
   }
 
-  Widget _checkRightReplyMessageType(MessageModel? _ref) {
-    switch (_ref!.type) {
+  Widget _checkRightReplyMessageType(MessageModel? ref) {
+    switch (ref!.type) {
       case 'text':
         return Container(
           constraints: BoxConstraints(maxWidth: Get.width * .7),
-          padding: EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Color(0xffF3F3F3),
+            color: const Color(0xffF3F3F3),
             borderRadius: BorderRadius.circular(8),
           ),
           child: MessageHelper.messageTextParser(
-            _ref.message ?? '',
+            ref.message ?? '',
             AppTextStyle.chatTextBlack,
-            _ref.mentions,
+            ref.mentions,
             true,
-            onClickMention: (id) => _onMentionClick(id),
+            onClickMention: (id) {},
             mentionStyle: AppTextStyle.chatTextBoldBlack,
           ),
         );
       case 'voice':
         return Container(
           constraints: BoxConstraints(maxWidth: Get.width * .7),
-          padding: EdgeInsets.all(10),
+          padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: Color(0xffF3F3F3),
+            color: const Color(0xffF3F3F3),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Text('<<${'voice'.tr}>>'),
         );
       case 'link':
         return MessageUrlContainer(
-          url: _ref.message!,
+          url: ref.message!,
           isReply: true,
           isLeftMessage: false,
         );
       case 'sticker':
         return MessageStickerContainer(
           isGroup: widget.isGroup,
-          url: _ref.sticker?.url ?? '',
-          groupId: _ref.sticker?.groupId ?? '',
+          url: ref.sticker?.url ?? '',
+          groupId: ref.sticker?.groupId ?? '',
         );
       case 'contact':
-        return MessageShareContactReplyCard(isleftMessage: false, shareContact: _ref.shareContact!);
+        return MessageShareContactReplyCard(isleftMessage: false, shareContact: ref.shareContact!);
       case 'media':
-        // if (_ref.message!.isNotEmpty) {
-        //   return ClipRRect(
-        //     ///chReply
-        //     borderRadius: BorderRadius.circular(8),
-        //     child: Column(
-        //       crossAxisAlignment: CrossAxisAlignment.start,
-        //       children: [
-        //         MessageReplyMedia(
-        //           isLeftMessage: false,
-        //           urlPath: _ref.attachments![0].url!,
-        //           isDropped: _ref.attachments![0].isDropped ?? false,
-        //         ),
-        //         Container(
-        //           width: Get.width / 2.4,
-        //           padding: EdgeInsets.all(10),
-        //           decoration: BoxDecoration(
-        //             color: Color(0xffe4e6eb),
-        //           ),
-        //           child: Text(
-        //             _ref.message!,
-        //             style: AppTextStyle.smallTextRegularBlack,
-        //           ),
-        //         )
-        //       ],
-        //     ),
-        //   );
-        // }
         return MessageReplyMedia(
           isLeftMessage: false,
-          urlPath: _ref.attachments![0].url!,
-          isDropped: _ref.attachments![0].isDropped ?? false,
+          urlPath: ref.attachments![0].url!,
+          isDropped: ref.attachments![0].isDropped ?? false,
         );
       case 'file':
         return MessageSendFileCard(
@@ -1183,12 +1012,9 @@ class _MessageItemState extends State<MessageItem> {
           isRightMessage: true,
           isReplyMessage: true,
         );
-      case 'vows':
-        return MessageCallWidget(
-          call: _ref.call,
-        );
+
       default:
-        return SizedBox();
+        return const SizedBox();
     }
   }
 
@@ -1224,18 +1050,10 @@ class _MessageItemState extends State<MessageItem> {
   }
 
   Widget _buildLongPressMenu(bool isNeedRef, Function onClosePopUp) {
-    // FocusScopeNode currentFocus = FocusScope.of(context);
-    // if (!currentFocus.hasPrimaryFocus && currentFocus.focusedChild != null) {
-    //   FocusManager.instance.primaryFocus!.unfocus();
-    // }
-    if (widget.isGroup) {
-      Get.find<GroupMessageController>().getListSeenMessageUser(widget.message.id);
-    }
-
     return StatefulBuilder(
       builder: (context, setState) => AnimatedCrossFade(
         crossFadeState: _isShowGroupSeenUser ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-        duration: Duration(milliseconds: 250),
+        duration: const Duration(milliseconds: 250),
         secondCurve: Curves.easeIn,
         firstCurve: Curves.easeOut,
         firstChild: ClipRRect(
@@ -1243,260 +1061,64 @@ class _MessageItemState extends State<MessageItem> {
           child: Container(
             width: 230,
             color: const Color(0xff343434),
-            child: Column(
-              children: [
-                GridView.count(
-                  padding: EdgeInsets.zero,
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 0,
-                  mainAxisSpacing: 0,
-                  shrinkWrap: true,
-                  physics: NeverScrollableScrollPhysics(),
-                  children: [
-                    ...List.generate(
-                      menuItems.length,
-                      (index) {
-                        var item = menuItems[index];
-                        return InkWell(
-                          onTap: () {
-                            onClosePopUp();
-                            if (!isDisableOption(index)) {
-                              generateFunctionOnContextMenu(item.type, isNeedRef);
-                            }
-                          },
-                          child: Container(
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                width: 0.125,
-                                color: Color(0xff4f4f4f),
-                              ),
-                            ),
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: <Widget>[
-                                Icon(
-                                  item.icon,
-                                  size: 24,
-                                  color: isDisableOption(index) ? Colors.grey : Colors.white,
-                                ),
-                                Container(
-                                  margin: EdgeInsets.only(top: 2),
-                                  child: Text(
-                                    item.title,
-                                    style: TextStyle(
-                                      color: isDisableOption(index) ? Colors.grey : Colors.white,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                ),
-                              ],
+            child: Column(children: [
+              GridView.count(
+                padding: EdgeInsets.zero,
+                crossAxisCount: 3,
+                crossAxisSpacing: 0,
+                mainAxisSpacing: 0,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                children: [
+                  ...List.generate(
+                    menuItems.length,
+                    (index) {
+                      var item = menuItems[index];
+                      return InkWell(
+                        onTap: () {
+                          onClosePopUp();
+                          if (!isDisableOption(index)) {
+                            generateFunctionOnContextMenu(item.type, isNeedRef);
+                          }
+                        },
+                        child: Container(
+                          alignment: Alignment.center,
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              width: 0.125,
+                              color: const Color(0xff4f4f4f),
                             ),
                           ),
-                        );
-                      },
-                    )
-                  ],
-                ),
-              ]..addIf(
-                  widget.isGroup,
-                  GetBuilder<GroupMessageController>(
-                      id: 'seenUserListBuilder',
-                      builder: (controller) {
-                        return Visibility(
-                          visible: _checkIfSentByMe(),
-                          child: controller.isGetSeenLoading
-                              ? Container(
-                                  margin: EdgeInsets.all(8),
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator.adaptive(
-                                    strokeWidth: 1.8,
-                                  ),
-                                )
-                              : Visibility(
-                                  visible: controller.userSeenMessageList.isNotEmpty,
-                                  child: InkWell(
-                                    onTap: () {
-                                      setState(() {
-                                        _isShowGroupSeenUser = true;
-                                      });
-                                    },
-                                    child: Container(
-                                      padding: const EdgeInsets.all(10),
-                                      alignment: Alignment.center,
-                                      child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Row(
-                                              crossAxisAlignment: CrossAxisAlignment.center,
-                                              mainAxisAlignment: MainAxisAlignment.center,
-                                              children: [
-                                                if (controller.userSeenMessageList.length > 3) SizedBox(width: 28),
-                                                ...List.generate(
-                                                  controller.userSeenMessageList.take(5).length,
-                                                  (index) => Transform.translate(
-                                                    offset: Offset(
-                                                      -(index * 12).toDouble(),
-                                                      0,
-                                                    ),
-                                                    child: Container(
-                                                      width: 35,
-                                                      height: 35,
-                                                      decoration: BoxDecoration(
-                                                        borderRadius: BorderRadius.circular(8),
-                                                        border: Border.all(
-                                                          width: 2,
-                                                          color: Colors.white,
-                                                        ),
-                                                      ),
-                                                      child: ClipRRect(
-                                                        borderRadius: BorderRadius.circular(7),
-                                                        child: CachedNetworkImage(
-                                                          imageUrl: controller.userSeenMessageList[index].avatar ?? '',
-                                                          fit: BoxFit.cover,
-                                                          placeholder: (context, url) => SizedBox(
-                                                            width: 15,
-                                                            height: 15,
-                                                            child: CircularProgressIndicator.adaptive(),
-                                                          ),
-                                                          errorWidget: (context, url, error) => Image.asset(
-                                                            Assets.app_assetsIconsMyPofileAvatar,
-                                                            width: 35,
-                                                            height: 35,
-                                                            fit: BoxFit.cover,
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                )
-                                              ]),
-                                          SizedBox(height: 4),
-                                          Text(
-                                            '${controller.userSeenMessageList.length} ' + 'seens'.tr,
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12,
-                                            ),
-                                          )
-                                        ],
-                                      ),
-                                    ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              Icon(
+                                item.icon,
+                                size: 24,
+                                color: isDisableOption(index) ? Colors.grey : Colors.white,
+                              ),
+                              Container(
+                                margin: const EdgeInsets.only(top: 2),
+                                child: Text(
+                                  item.title,
+                                  style: TextStyle(
+                                    color: isDisableOption(index) ? Colors.grey : Colors.white,
+                                    fontSize: 12,
                                   ),
                                 ),
-                        );
-                      }),
-                ),
-            ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  )
+                ],
+              ),
+            ]),
           ),
         ),
-        secondChild: widget.isGroup
-            ? ClipRRect(
-                borderRadius: BorderRadius.circular(5),
-                child: Container(
-                  constraints: BoxConstraints(maxWidth: 230),
-                  color: const Color(0xff343434),
-                  child: GetBuilder<GroupMessageController>(
-                      id: 'seenUserListBuilder',
-                      builder: (controller) {
-                        return Column(
-                          children: [
-                            InkWell(
-                              onTap: () {
-                                setState(() {
-                                  _isShowGroupSeenUser = false;
-                                });
-                              },
-                              child: Padding(
-                                padding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      Icons.arrow_back_ios,
-                                      color: Colors.white,
-                                      size: 22,
-                                    ),
-                                    Text(
-                                      'back'.tr,
-                                      style: TextStyle(color: Colors.white),
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ),
-                            Container(
-                              width: double.infinity,
-                              height: 1,
-                              color: Colors.white,
-                            ),
-                            SizedBox(height: 12),
-                            Container(
-                              constraints: BoxConstraints(maxHeight: 200),
-                              child: ListView.builder(
-                                padding: EdgeInsets.zero,
-                                shrinkWrap: true,
-                                itemCount: controller.userSeenMessageList.length,
-                                itemBuilder: (context, index) {
-                                  return InkWell(
-                                    onTap: () => _navigateToViewContact(
-                                      controller.userSeenMessageList[index].profileId,
-                                    ),
-                                    child: Padding(
-                                      padding: const EdgeInsets.only(
-                                        bottom: 12,
-                                        left: 12,
-                                        right: 12,
-                                      ),
-                                      child: Row(
-                                        crossAxisAlignment: CrossAxisAlignment.center,
-                                        children: [
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(8),
-                                            child: CachedNetworkImage(
-                                              imageUrl: controller.userSeenMessageList[index].avatar ?? '',
-                                              width: 35,
-                                              height: 35,
-                                              fit: BoxFit.cover,
-                                              placeholder: (context, url) => SizedBox(
-                                                width: 15,
-                                                height: 15,
-                                                child: CircularProgressIndicator.adaptive(),
-                                              ),
-                                              errorWidget: (context, url, error) => Image.asset(
-                                                Assets.app_assetsIconsMyPofileAvatar,
-                                                width: 35,
-                                                height: 35,
-                                                fit: BoxFit.cover,
-                                              ),
-                                            ),
-                                          ),
-                                          SizedBox(width: 8),
-                                          Expanded(
-                                            child: Text(
-                                              controller.userSeenMessageList[index].name,
-                                              overflow: TextOverflow.ellipsis,
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontSize: 13.3,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          )
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ),
-                          ],
-                        );
-                      }),
-                ),
-              )
-            : SizedBox(),
+        secondChild: const SizedBox(),
       ),
     );
   }
@@ -1510,32 +1132,27 @@ class _MessageItemState extends State<MessageItem> {
           children: [
             Visibility(
               visible: !_checkIfSentByMe(),
-              child: InkWell(
-                onTap: () => _navigateToViewContact(
-                  widget.message.sender!.profileId ?? '',
-                ),
-                child: WidgetBindingProfileRadius(
-                  borderRadius: 8,
-                  size: 40,
-                  avatarUrl: widget.message.sender!.avatar ?? '',
-                  isActive: false,
-                ),
+              child: WidgetBindingProfileRadius(
+                borderRadius: 8,
+                size: 40,
+                avatarUrl: widget.message.sender!.avatar ?? '',
+                isActive: false,
               ),
             ),
             const SizedBox(width: 8),
             Container(
-              padding: EdgeInsets.all(10),
+              padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
                   width: .8,
-                  color: Color(0XFFD9D9D9),
+                  color: const Color(0XFFD9D9D9),
                 ),
               ),
               child: isLeftMessage
                   ? Text(
-                      '${widget.message.sender!.name} ' + 'unsent_message'.tr,
-                      style: TextStyle(
+                      '${widget.message.sender!.name} ${'unsent_message'.tr}',
+                      style: const TextStyle(
                         color: Color(0XFFD9D9D9),
                         fontSize: 13.3,
                         fontWeight: FontWeight.w400,
@@ -1543,7 +1160,7 @@ class _MessageItemState extends State<MessageItem> {
                     )
                   : Text(
                       'you_unsent_a_message'.tr,
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: Color(0xffACACAC),
                         fontSize: 13.3,
                         fontWeight: FontWeight.w400,
@@ -1589,27 +1206,9 @@ class _MessageItemState extends State<MessageItem> {
       ));
     }
 
-    Future.delayed(Duration(milliseconds: 1000), () {
+    Future.delayed(const Duration(milliseconds: 1000), () {
       Navigator.of(context).pop();
     });
-    await showCupertinoDialog(
-        barrierDismissible: false,
-        context: context,
-        builder: (ctx) {
-          return Scaffold(
-            backgroundColor: Colors.transparent,
-            body: Center(
-              child: CupertinoDialogIcon(text: 'copied'),
-            ),
-          );
-        });
-  }
-
-  void _onForwardMessage(bool isNeedRef) {
-    Get.to(
-      () => ChatroomForwardScreen(),
-      arguments: isNeedRef ? widget.message.ref?.id : widget.message.id,
-    );
   }
 
   void _onConfirmDelete() {
@@ -1619,19 +1218,6 @@ class _MessageItemState extends State<MessageItem> {
 
   void _onReplyMessage() {
     _checkIfMessageInGroup().onSelectReplyMessage(widget.message);
-  }
-
-  void _navigateToViewContact(String profileId) {
-    // contextMenuController!.hideMenu();
-    if (widget.isGroup) {
-      Get.find<GroupMessageController>().navigateToViewContactFromGroupProfile(profileId);
-    } else {
-      Get.find<ChatRoomMessageController>().navigateToViewContactFromAppBarTap(profileId);
-    }
-  }
-
-  void _onMentionClick(String userId) {
-    _navigateToViewContact('g_$userId');
   }
 
   void _unsendMessage() {
@@ -1657,7 +1243,7 @@ class _MessageItemState extends State<MessageItem> {
       isScrollControlled: false,
       context: context,
       builder: (BuildContext context) => Container(
-        margin: EdgeInsets.only(bottom: 25, left: 16, right: 16),
+        margin: const EdgeInsets.only(bottom: 25, left: 16, right: 16),
         child: ListView(
           shrinkWrap: true,
           children: [
@@ -1668,7 +1254,7 @@ class _MessageItemState extends State<MessageItem> {
                 child: Container(
                   height: 60,
                   alignment: Alignment.center,
-                  decoration: BoxDecoration(
+                  decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(4),
@@ -1692,7 +1278,7 @@ class _MessageItemState extends State<MessageItem> {
               child: Container(
                 height: 60,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(4),
@@ -1709,7 +1295,7 @@ class _MessageItemState extends State<MessageItem> {
                 ),
               ),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             InkWell(
               onTap: () {
                 Navigator.pop(context);
@@ -1717,7 +1303,7 @@ class _MessageItemState extends State<MessageItem> {
               child: Container(
                 height: 60,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(4),
@@ -1726,7 +1312,7 @@ class _MessageItemState extends State<MessageItem> {
                 ),
                 child: Text(
                   'cancel'.tr,
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Colors.blue,
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
@@ -1751,9 +1337,9 @@ class _MessageItemState extends State<MessageItem> {
             shrinkWrap: true,
             children: [
               Container(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(4),
@@ -1771,8 +1357,8 @@ class _MessageItemState extends State<MessageItem> {
                 onTap: Get.back,
                 child: Container(
                   alignment: Alignment.center,
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(4),
@@ -1813,9 +1399,6 @@ class _MessageItemState extends State<MessageItem> {
       case ContextMenu.reply:
         _onReplyMessage();
         break;
-      case ContextMenu.forward:
-        _onForwardMessage(isNeedRef);
-        break;
       case ContextMenu.delete:
         _showDeleteAndUnsendMessageDialog();
         break;
@@ -1848,31 +1431,31 @@ class MessageSendFileCard extends StatelessWidget {
     bool isForward = widget.message.refType == 'forward';
     bool isForwardRef = widget.message.ref?.refType == 'forward';
     var caption = isForward || isReplyMessage ? widget.message.ref?.message : widget.message.message;
-    var _isDropped = checkIfDrop(isForwardRef, isForward);
+    var isDropped = checkIfDrop(isForwardRef, isForward);
 
     return FittedBox(
       child: Column(
         children: [
           if (isReplyMessage) fileCard(isForwardRef ? ref?.ref?.attachments : ref?.attachments, caption!),
           if (!isReplyMessage) fileCard(isForward ? attachmentsRef : attachments, caption!),
-          if (_isDropped) ...[
-            SizedBox(height: 7),
+          if (isDropped) ...[
+            const SizedBox(height: 7),
             Row(
               mainAxisAlignment: isRightMessage ? MainAxisAlignment.end : MainAxisAlignment.start,
               children: [
-                Icon(
+                const Icon(
                   Icons.error_outline,
                   color: Color(0xFFACACAC),
                   size: 16,
                 ),
-                SizedBox(width: 5),
+                const SizedBox(width: 5),
                 Text(
                   'this_file_is_no_longer_available'.tr,
-                  style: TextStyle(fontSize: 11.11, color: Color(0x993C3C43)),
+                  style: const TextStyle(fontSize: 11.11, color: Color(0x993C3C43)),
                 ),
               ],
             ),
-            if (isReplyMessage) SizedBox(height: 7),
+            if (isReplyMessage) const SizedBox(height: 7),
           ]
         ],
       ),
@@ -1888,10 +1471,10 @@ class MessageSendFileCard extends StatelessWidget {
         constraints: BoxConstraints(maxWidth: Get.width * .65),
         decoration: BoxDecoration(
           color: isReplyMessage
-              ? Color.fromARGB(255, 223, 222, 222)
+              ? const Color.fromARGB(255, 223, 222, 222)
               : isRightMessage
                   ? Colors.green
-                  : Color(0xFFE4E6EB),
+                  : const Color(0xFFE4E6EB),
           borderRadius: BorderRadius.circular(8),
         ),
         child: Column(
@@ -1917,7 +1500,7 @@ class MessageSendFileCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (!isReplyMessage)
-                    Divider(
+                    const Divider(
                       color: Colors.white,
                       height: 0,
                       indent: 0,
@@ -1929,7 +1512,7 @@ class MessageSendFileCard extends StatelessWidget {
                       caption,
                       style: isRightMessage && !isReplyMessage
                           ? AppTextStyle.smallTextRegularWhite
-                          : TextStyle(
+                          : const TextStyle(
                               color: Color(0xff000000),
                               fontWeight: FontWeight.w400,
                               fontSize: 16,
@@ -1947,9 +1530,9 @@ class MessageSendFileCard extends StatelessWidget {
   bool checkIfDrop(bool isForwardRef, bool isForward) {
     bool isDropped = false;
 
-    bool checkfirstItem(MessageModel _model) {
-      if (_model.attachments!.isNotEmpty) {
-        return _model.attachments!.first.isDropped ?? false;
+    bool checkfirstItem(MessageModel model) {
+      if (model.attachments!.isNotEmpty) {
+        return model.attachments!.first.isDropped ?? false;
       }
       return false;
     }
@@ -1978,7 +1561,7 @@ class FileCacheProgress extends StatefulWidget {
   final String highlightText;
   final bool isGroup;
 
-  FileCacheProgress({
+  const FileCacheProgress({
     Key? key,
     required this.attachment,
     required this.isRightMessage,
@@ -2019,14 +1602,14 @@ class _FileCacheProgressState extends State<FileCacheProgress> {
   Widget _progressBuilder(String fileType) {
     //show empty
     if (_isLoad) {
-      return SizedBox();
+      return const SizedBox();
     }
 
     // show default
     if (_isShowDefault) {
       return Text(
         fileType,
-        style: TextStyle(
+        style: const TextStyle(
           color: Color(0xff4882B8),
           fontSize: 12,
           fontWeight: FontWeight.w600,
@@ -2038,7 +1621,7 @@ class _FileCacheProgressState extends State<FileCacheProgress> {
       return Container(
         width: 24,
         height: 24,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           shape: BoxShape.circle,
           color: Color(0x334FB848),
         ),
@@ -2061,7 +1644,7 @@ class _FileCacheProgressState extends State<FileCacheProgress> {
         alignment: Alignment.center,
         children: [
           CircleAvatar(
-            backgroundColor: Color(0xFF343434).withOpacity(.1),
+            backgroundColor: const Color(0xFF343434).withOpacity(.1),
             child: Icon(
               Icons.close,
               color: AppColors.primaryColor,
@@ -2091,7 +1674,7 @@ class _FileCacheProgressState extends State<FileCacheProgress> {
     String url = widget.attachment.url ?? '';
     bool isDropped = widget.attachment.isDropped ?? false;
     return Container(
-      padding: EdgeInsets.all(12),
+      padding: const EdgeInsets.all(12),
       child: InkWell(
         onTap: url == '' || isDropped
             ? () {}
@@ -2114,7 +1697,7 @@ class _FileCacheProgressState extends State<FileCacheProgress> {
                     alignment: Alignment.center,
                     width: 40,
                     height: 40,
-                    margin: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                    margin: const EdgeInsets.fromLTRB(0, 0, 10, 0),
                     decoration: BoxDecoration(
                       color: Colors.white,
                       borderRadius: BorderRadius.circular(4),
@@ -2152,7 +1735,7 @@ class _FileCacheProgressState extends State<FileCacheProgress> {
                 alignment: Alignment.center,
                 width: 40,
                 height: 40,
-                margin: EdgeInsets.fromLTRB(10, 0, 0, 0),
+                margin: const EdgeInsets.fromLTRB(10, 0, 0, 0),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(4),
@@ -2168,7 +1751,7 @@ class _FileCacheProgressState extends State<FileCacheProgress> {
                             alignment: Alignment.center,
                             children: [
                               CircleAvatar(
-                                backgroundColor: Color(0xFF343434).withOpacity(.1),
+                                backgroundColor: const Color(0xFF343434).withOpacity(.1),
                                 child: Icon(
                                   Icons.close,
                                   color: AppColors.primaryColor,
@@ -2222,11 +1805,10 @@ class _FileCacheProgressState extends State<FileCacheProgress> {
 
   void downloadFile() async {
     cancelToken = dio.CancelToken();
-    CacheManagerHelper.downloadFileToCacheManager(cancelToken, widget.attachment.url!,
-        onDownloadChange: (int _percent) {
+    CacheManagerHelper.downloadFileToCacheManager(cancelToken, widget.attachment.url!, onDownloadChange: (int percent) {
       setState(() {
-        percentage = _percent;
-        if (_percent == 100) {
+        percentage = percent;
+        if (percent == 100) {
           _isShowDefault = true;
         }
       });
@@ -2266,14 +1848,14 @@ class MessageShareContactCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       constraints: BoxConstraints(maxWidth: Get.width * .65),
-      padding: EdgeInsets.symmetric(vertical: 11, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 16),
       // margin: EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
-        color: isleftMessage ? Color(0xffe4e6eb) : AppColors.primaryColor,
+        color: isleftMessage ? const Color(0xffe4e6eb) : AppColors.primaryColor,
         borderRadius: BorderRadius.circular(4),
       ),
       child: ListView(
-        physics: NeverScrollableScrollPhysics(),
+        physics: const NeverScrollableScrollPhysics(),
         padding: EdgeInsets.zero,
         shrinkWrap: true,
         children: [
@@ -2294,38 +1876,25 @@ class MessageShareContactCard extends StatelessWidget {
               style: isleftMessage ? AppTextStyle.smallTextRegularBlack : AppTextStyle.smallTextRegularWhite,
             ),
           ),
-          SizedBox(height: 8),
-          InkWell(
-            onTap: () => _viewShareContact(shareContact.profileId),
-            child: Container(
-              alignment: Alignment.center,
-              padding: EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  width: 1,
-                  color: isleftMessage ? Colors.grey.shade500 : Colors.white,
-                ),
-                borderRadius: BorderRadius.circular(4),
+          const SizedBox(height: 8),
+          Container(
+            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(vertical: 16),
+            decoration: BoxDecoration(
+              border: Border.all(
+                width: 1,
+                color: isleftMessage ? Colors.grey.shade500 : Colors.white,
               ),
-              child: Text(
-                'view_contact'.tr,
-                style: isleftMessage ? AppTextStyle.smallTextRegularBlack : AppTextStyle.smallTextRegularWhite,
-              ),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: Text(
+              'view_contact'.tr,
+              style: isleftMessage ? AppTextStyle.smallTextRegularBlack : AppTextStyle.smallTextRegularWhite,
             ),
           )
         ],
       ),
     );
-  }
-
-  void _viewShareContact(id) {
-    var _accountId = Get.find<AccountUserProfileController>().profile?.id;
-    if (_accountId == shareContact.id) return;
-    Get.lazyPut(() => AddFriendBySearchController());
-    Get.find<AddFriendBySearchController>().onInit();
-    Get.find<AddFriendBySearchController>().profileId = id;
-    Get.find<AddFriendBySearchController>().getUserProfile(id);
-    Get.toNamed(Routes.searchFriendResult, preventDuplicates: false);
   }
 }
 
@@ -2342,12 +1911,12 @@ class MessageShareContactReplyCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       constraints: BoxConstraints(maxWidth: Get.width * .35),
-      padding: EdgeInsets.symmetric(vertical: 11, horizontal: 12),
+      padding: const EdgeInsets.symmetric(vertical: 11, horizontal: 12),
       foregroundDecoration: BoxDecoration(
-        color: Color(0xffFDFFFD).withOpacity(.5),
+        color: const Color(0xffFDFFFD).withOpacity(.5),
       ),
       decoration: BoxDecoration(
-        color: isleftMessage ? Color(0xffE4E6EB) : AppColors.primaryColor,
+        color: isleftMessage ? const Color(0xffE4E6EB) : AppColors.primaryColor,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Column(
@@ -2360,7 +1929,7 @@ class MessageShareContactReplyCard extends StatelessWidget {
                 avatarUrl: shareContact.avatar,
                 isActive: false,
               ),
-              SizedBox(width: 12),
+              const SizedBox(width: 12),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -2370,7 +1939,7 @@ class MessageShareContactReplyCard extends StatelessWidget {
                         ? AppTextStyle.smallTextRegularBlack.copyWith(fontSize: 12)
                         : AppTextStyle.smallTextRegularWhite.copyWith(fontSize: 12),
                   ),
-                  SizedBox(height: 4),
+                  const SizedBox(height: 4),
                   Text(
                     shareContact.country,
                     style: isleftMessage
@@ -2381,10 +1950,10 @@ class MessageShareContactReplyCard extends StatelessWidget {
               )
             ],
           ),
-          SizedBox(height: 6),
+          const SizedBox(height: 6),
           Container(
             alignment: Alignment.center,
-            padding: EdgeInsets.symmetric(vertical: 5),
+            padding: const EdgeInsets.symmetric(vertical: 5),
             decoration: BoxDecoration(
               border: Border.all(
                 width: 1,
@@ -2422,12 +1991,12 @@ class MessageReplyMedia extends StatelessWidget {
       alignment: isLeftMessage ? Alignment.centerLeft : Alignment.centerRight,
       child: Container(
         decoration: BoxDecoration(
-          color: Color(0xFFE3E5E3),
+          color: const Color(0xFFE3E5E3),
           borderRadius: BorderRadius.circular(8),
         ),
         height: 100,
         width: 150,
-        child: Icon(
+        child: const Icon(
           Icons.error_outline,
           color: Color(0xFF9A9A9A),
           size: 26.67,
@@ -2440,7 +2009,7 @@ class MessageReplyMedia extends StatelessWidget {
   Widget build(BuildContext context) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
-      child: Container(
+      child: SizedBox(
           width: Get.width / 2,
           // foregroundDecoration: BoxDecoration(
           //   color: Color(0xffFDFFFD).withOpacity(.5),
@@ -2452,13 +2021,13 @@ class MessageReplyMedia extends StatelessWidget {
                       alignment: isLeftMessage ? WrapAlignment.start : WrapAlignment.end,
                       children: [
                         Container(
-                          constraints: BoxConstraints(maxHeight: 100),
+                          constraints: const BoxConstraints(maxHeight: 100),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(8),
                             child: CachedNetworkImage(
                               imageUrl: urlPath,
                               fit: BoxFit.contain,
-                              placeholder: (context, url) => CircularProgressIndicator.adaptive(),
+                              placeholder: (context, url) => const CircularProgressIndicator.adaptive(),
                               errorWidget: (context, url, error) => MediaHelper.brokenfile(scale: 5),
                             ),
                           ),
@@ -2495,8 +2064,8 @@ class MessageStickerContainer extends StatelessWidget {
           width: 100,
           height: 100,
           imageUrl: url,
-          placeholder: (context, url) => Center(child: SizedBox()),
-          errorWidget: (context, url, error) => Icon(Icons.error),
+          placeholder: (context, url) => const Center(child: SizedBox()),
+          errorWidget: (context, url, error) => const Icon(Icons.error),
         ),
       ),
     );
@@ -2545,7 +2114,7 @@ class MessageStickerContainer extends StatelessWidget {
                 const SizedBox(height: 8),
                 Expanded(
                   child: GridView.builder(
-                    padding: EdgeInsets.all(8),
+                    padding: const EdgeInsets.all(8),
                     itemCount: controller.stickersInDetail?.data?.stickers?.length ?? 0,
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       mainAxisSpacing: 30,
@@ -2562,7 +2131,7 @@ class MessageStickerContainer extends StatelessWidget {
                           height: 10,
                           child: CachedNetworkImage(
                             imageUrl: sticker?.image ?? '',
-                            errorWidget: (context, url, error) => Icon(Icons.error),
+                            errorWidget: (context, url, error) => const Icon(Icons.error),
                           ),
                         ),
                       );
@@ -2595,11 +2164,7 @@ class MessageStickerContainer extends StatelessWidget {
 
   void _sentSticker({required String stickerId, bool isGroup = false}) {
     Get.back();
-    if (isGroup) {
-      Get.find<GroupMessageController>().onSentSticker(stickerId);
-    } else {
-      Get.find<ChatRoomMessageController>().onSentSticker(stickerId);
-    }
+    Get.find<ChatRoomMessageController>().onSentSticker(stickerId);
   }
 }
 
@@ -2648,25 +2213,25 @@ class _MessageUrlContainerState extends State<MessageUrlContainer> with Automati
       onTap: () => Util.launchWebUrl(widget.url),
       child: widget.isReply
           ? Container(
-              padding: EdgeInsets.all(10),
+              padding: const EdgeInsets.all(10),
               constraints: BoxConstraints(maxWidth: Get.width * .65),
               decoration: BoxDecoration(
-                color: Color(0xffe4e6eb),
+                color: const Color(0xffe4e6eb),
                 borderRadius: BorderRadius.circular(8),
               ),
               width: (Get.width / 1.5) - MediaQuery.of(context).size.width * 0.12,
-              child: Text('${widget.url}'),
+              child: Text(widget.url),
             )
           : ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: Container(
                 constraints: BoxConstraints(maxWidth: Get.width * .65),
-                color: widget.isLeftMessage ? Color(0xffe4e6eb) : AppColors.primaryColor,
-                padding: EdgeInsets.all(10),
+                color: widget.isLeftMessage ? const Color(0xffe4e6eb) : AppColors.primaryColor,
+                padding: const EdgeInsets.all(10),
                 child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
                   MessageHelper.messageTextParser(
                     widget.url,
-                    AppTextStyle.smallTextRegularBlack,
+                    AppTextStyle.extraSmallTextMediumWhite,
                     [],
                     false,
                     mentionStyle: AppTextStyle.chatTextBoldBlack,
@@ -2700,7 +2265,7 @@ class _MessageUrlContainerState extends State<MessageUrlContainer> with Automati
                   if (_preview?.image.isNotEmpty ?? false)
                     Container(
                       padding: const EdgeInsets.only(top: 8.0),
-                      constraints: BoxConstraints(maxHeight: 120),
+                      constraints: const BoxConstraints(maxHeight: 120),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(6),
                         child: CachedNetworkImage(
@@ -2708,7 +2273,7 @@ class _MessageUrlContainerState extends State<MessageUrlContainer> with Automati
                           memCacheWidth: Get.width.toInt(),
                           width: double.maxFinite,
                           fit: BoxFit.cover,
-                          placeholder: (context, url) => SizedBox(
+                          placeholder: (context, url) => const SizedBox(
                             height: 15,
                             child: Center(
                               child: SizedBox(
@@ -2718,7 +2283,7 @@ class _MessageUrlContainerState extends State<MessageUrlContainer> with Automati
                               ),
                             ),
                           ),
-                          errorWidget: (context, url, error) => SizedBox.shrink(),
+                          errorWidget: (context, url, error) => const SizedBox.shrink(),
                         ),
                       ),
                     )
@@ -2745,20 +2310,20 @@ class MessageMediaGrid extends StatelessWidget {
   final bool isLeftMessage;
   final bool isWithMessage;
 
-  bool _checkIfMediaImage(AttachmentModel _model) {
-    var _url = _model.url ?? '';
-    var isImageByMimeType = _model.mimeType?.startsWith('image/') ?? false;
-    return _url.isImageFileName || isImageByMimeType;
+  bool _checkIfMediaImage(AttachmentModel model) {
+    var url = model.url ?? '';
+    var isImageByMimeType = model.mimeType?.startsWith('image/') ?? false;
+    return url.isImageFileName || isImageByMimeType;
   }
 
-  Widget _mediaSwitchWidget(AttachmentModel _model, int index) {
-    var uploadPath = _model.uploadPath;
-    var url = _model.url ?? '';
+  Widget _mediaSwitchWidget(AttachmentModel model, int index) {
+    var uploadPath = model.uploadPath;
+    var url = model.url ?? '';
     // is upload file
     if (uploadPath != null && url == '') {
       final mimeType = lookupMimeType(uploadPath);
       final isImage = mimeType!.startsWith('image/');
-      var uploadPercentage = _model.uploadPercentage ?? 0;
+      var uploadPercentage = model.uploadPercentage ?? 0;
       return Stack(
         fit: message.attachments!.length == 1 ? StackFit.loose : StackFit.expand,
         alignment: Alignment.center,
@@ -2774,7 +2339,7 @@ class MessageMediaGrid extends StatelessWidget {
               : MessageVideoContainer(urlPath: url, fileUploadPath: uploadPercentage == 100 ? '' : uploadPath)),
           if (uploadPercentage < 100)
             InkWell(
-              onTap: () => MessageUploadHelper().cancelUpload(uploadPercentage > 0, _model, isGroup),
+              onTap: () => MessageUploadHelper().cancelUpload(uploadPercentage > 0, model, isGroup),
               child: SizedBox(
                 width: 43,
                 height: 43,
@@ -2782,7 +2347,7 @@ class MessageMediaGrid extends StatelessWidget {
                   alignment: Alignment.center,
                   children: [
                     CircleAvatar(
-                      backgroundColor: Color(0xFFFDFFFD).withOpacity(.7),
+                      backgroundColor: const Color(0xFFFDFFFD).withOpacity(.7),
                       child: Icon(
                         Icons.close,
                         color: AppColors.primaryColor,
@@ -2803,21 +2368,21 @@ class MessageMediaGrid extends StatelessWidget {
 
     // file from url
     ///TODO
-    return _checkIfMediaImage(_model)
+    return _checkIfMediaImage(model)
         ? Builder(
             builder: (context) => CachedNetworkImage(
               imageUrl: url,
               fit: BoxFit.cover,
               memCacheWidth: Get.width.toInt(),
               // width: double.maxFinite,
-              fadeInDuration: Duration(milliseconds: 100),
-              fadeOutDuration: Duration(milliseconds: 100),
+              fadeInDuration: const Duration(milliseconds: 100),
+              fadeOutDuration: const Duration(milliseconds: 100),
               placeholder: (context, url) =>
                   uploadPath != null // replace loading with image from path after upload success
                       ? Image.file(
                           File(uploadPath),
                           fit: BoxFit.cover,
-                          errorBuilder: ((context, error, stackTrace) => Text('err')),
+                          errorBuilder: ((context, error, stackTrace) => const Text('err')),
                         )
                       : Container(
                           width: 100,
@@ -2850,20 +2415,20 @@ class MessageMediaGrid extends StatelessWidget {
       width: double.maxFinite,
       height: 116,
       decoration: BoxDecoration(
-          color: Color(0xffe4e6eb),
+          color: const Color(0xffe4e6eb),
           border: Border(bottom: BorderSide(color: Colors.white, width: message.message!.isEmpty ? 0 : 1))),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.error_outline,
             color: Color(0xFFACACAC),
             size: 16,
           ),
-          SizedBox(width: 5),
+          const SizedBox(width: 5),
           Text(
             'this_image_is_no_longer_available'.tr,
-            style: TextStyle(fontSize: 11.11, color: Color(0x993C3C43)),
+            style: const TextStyle(fontSize: 11.11, color: Color(0x993C3C43)),
           ),
         ],
       ),
@@ -2896,17 +2461,17 @@ class MessageMediaGrid extends StatelessWidget {
             gridDelegate:
                 SliverQuiltedGridDelegate(crossAxisCount: 2, mainAxisSpacing: 1, crossAxisSpacing: 1, pattern: [
               if (message.attachments!.length == 2) ...[
-                QuiltedGridTile(1, 1),
-                QuiltedGridTile(1, 1),
+                const QuiltedGridTile(1, 1),
+                const QuiltedGridTile(1, 1),
               ] else if (message.attachments!.length == 1) ...[
-                QuiltedGridTile(1, 2),
+                const QuiltedGridTile(1, 2),
               ] else ...{
-                QuiltedGridTile(1, 2),
-                QuiltedGridTile(1, 1),
-                QuiltedGridTile(1, 1),
-                QuiltedGridTile(1, 2),
-                QuiltedGridTile(1, 1),
-                QuiltedGridTile(1, 1),
+                const QuiltedGridTile(1, 2),
+                const QuiltedGridTile(1, 1),
+                const QuiltedGridTile(1, 1),
+                const QuiltedGridTile(1, 2),
+                const QuiltedGridTile(1, 1),
+                const QuiltedGridTile(1, 1),
               }
             ]),
             childrenDelegate: SliverChildBuilderDelegate(
@@ -2921,18 +2486,13 @@ class MessageMediaGrid extends StatelessWidget {
   }
 
   void _navigateToChatViewMedia(int selectIndex) async {
-    // var mediaFileWithQr =
-    //     message.attachments!.first.originalName?.contains('shareqr');
-    // if (mediaFileWithQr ?? false) {
-    //   hasQrcode = true;
-    // }
-    final isFromSearch = false;
+    const isFromSearch = false;
     await Get.to(
-      () => ChatRoomViewMediaScreen(),
+      () => const ChatRoomViewMediaScreen(),
       arguments: [message.attachments!, selectIndex, isGroup, isFromSearch, message],
       opaque: false,
       transition: Transition.fadeIn,
-      duration: Duration(milliseconds: 200),
+      duration: const Duration(milliseconds: 200),
     );
   }
 }
@@ -2982,7 +2542,7 @@ class _MessageVideoContainerState extends State<MessageVideoContainer> {
                       width: 40,
                       height: 40,
                       alignment: Alignment.center,
-                      decoration: BoxDecoration(
+                      decoration: const BoxDecoration(
                         color: Colors.white70,
                         shape: BoxShape.circle,
                       ),
@@ -3017,155 +2577,6 @@ class _MessageVideoContainerState extends State<MessageVideoContainer> {
           ),
         );
       },
-    );
-  }
-}
-
-class MessageCallWidget extends StatelessWidget {
-  const MessageCallWidget({Key? key, required this.call}) : super(key: key);
-
-  final Call? call;
-
-  Color _onCheckIconBackground(isMissedCall) {
-    var _accountId = Get.find<AccountUserProfileController>().profile?.id;
-    var _isMyMessage = _accountId == call?.userId;
-    return isMissedCall && !_isMyMessage ? AppColors.red : Color(0xFF3C3C43).withOpacity(.6);
-  }
-
-  String _onCheckIconAsset() {
-    if (call?.isMissedCall ?? false) {
-      return Assets.app_assetsIconsMissedCall;
-    } else if (call?.name == 'outgoing') {
-      return Assets.app_assetsIconsCallOut;
-    } else if (call?.name == 'incoming') {
-      return Assets.app_assetsIconsCallIn;
-    }
-    return Assets.app_assetsIconsCall;
-  }
-
-  String _onCheckCallTitle(isMissedCall) {
-    var _accountId = Get.find<AccountUserProfileController>().profile?.id;
-    var _isMyMessage = _accountId == call?.userId;
-    // if (data['type'] == 'audio') {
-    return isMissedCall && !_isMyMessage ? 'missed_audio_call'.tr : 'audio_call'.tr;
-    // } else {
-    //   return data['isMissed']! ? 'missed_video_call'.tr : 'video_call'.tr;
-    // }
-  }
-
-  String _onCheckCallSubtitle() {
-    if (call?.isMissedCall ?? false) {
-      if (call?.name == 'outgoing') {
-        return 'tap_to_call_again'.tr;
-      } else {
-        return 'tap_to_call_back'.tr;
-      }
-    }
-    if (call?.endAt != null) {
-      return DateTimeHelper.timeDurationBetweenDate(call?.receivedAt, call?.endAt);
-    }
-    if (call?.receivedAt != null) {
-      return 'started_at'.tr + ' ' + DateTimeHelper.getShortTimer(call!.receivedAt!);
-    }
-    return '';
-  }
-
-  void _handleCallAgain() async {
-    Get.back();
-    final controller = Get.find<ChatRoomController>();
-    await controller.onAudioCall(roomId: controller.currentRoomId);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return FittedBox(
-      child: InkWell(
-        onTap: _showMessCallOptionDialog,
-        child: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(8),
-            color: Color(0xffe4e6eb),
-          ),
-          height: 72.5,
-          padding: EdgeInsets.all(15),
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              CircleAvatar(
-                backgroundColor: _onCheckIconBackground(call?.isMissedCall ?? false),
-                child: Image.asset(
-                  _onCheckIconAsset(),
-                  width: 33,
-                  height: 33,
-                ),
-              ),
-              SizedBox(width: 10),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Flexible(
-                    child: Text(
-                      _onCheckCallTitle(call?.isMissedCall ?? false),
-                      style: TextStyle(fontWeight: FontWeight.w600, fontSize: 15.5),
-                    ),
-                  ),
-                  Flexible(child: Text(_onCheckCallSubtitle()))
-                ],
-              )
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _showMessCallOptionDialog() async {
-    await showModalBottomSheet(
-      backgroundColor: Colors.transparent,
-      isScrollControlled: false,
-      context: Get.context!,
-      builder: (BuildContext context) => Container(
-        margin: EdgeInsets.only(bottom: 25, left: 16, right: 16),
-        child: ListView(
-          shrinkWrap: true,
-          children: [
-            InkWell(
-              onTap: _handleCallAgain,
-              child: ItemModalBottomSheet(
-                lableTitle: 'audio_call',
-                topLeft: 4.0,
-                topRight: 4.0,
-              ),
-            ),
-            Container(height: .8, color: Colors.grey),
-            InkWell(
-              onTap: () {
-                // _handleCallAgain
-              },
-              child: ItemModalBottomSheet(
-                lableTitle: 'video_call',
-                bottomLeft: 4.0,
-                bottomRight: 4.0,
-              ),
-            ),
-            SizedBox(height: 8),
-            InkWell(
-              onTap: () {
-                Navigator.pop(context);
-              },
-              child: ItemModalBottomSheet(
-                bottomLeft: 4.0,
-                bottomRight: 4.0,
-                topLeft: 4.0,
-                topRight: 4.0,
-                lableTitle: 'cancel',
-                colorLable: Colors.red,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

@@ -1,10 +1,7 @@
 import 'dart:async';
 import 'dart:developer';
-import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:socket_io_client/socket_io_client.dart';
 import '../../../util/helper/crash_report.dart';
-import '../storage_token.dart';
 import 'base_api_response.dart';
 import 'socket_path.dart';
 
@@ -23,6 +20,9 @@ class BaseSocket {
   static late Socket _groupSocket;
   static late Socket _deviceSocket;
 
+  static late String baseSocketUrl;
+  static late String token;
+
   static Future<Socket> initConnection(String nameSpace) async {
     return _switchNameSpace(nameSpace);
   }
@@ -31,42 +31,16 @@ class BaseSocket {
     return _switchNameSpace(nameSpace);
   }
 
-  static Future<void> initSocketConnection() async {
-    bool isAuthenticated = StorageToken.isAccessTokenExist();
-    var isToken = StorageToken.readToken();
-    log(isToken, name: 'api_token');
-    // without auth
-    _authSocket = await _connectWithoutAuth(SocketPath.auth);
-    _countrySocket = await _connectWithoutAuth(SocketPath.country);
-    _termOfServiceSocket = await _connectWithoutAuth(SocketPath.termOfService);
-    // with auth
-    if (isAuthenticated) {
-      _profileSocket = await _connectWithAuth(SocketPath.profile);
-      _deviceSocket = await _connectWithAuth(SocketPath.device);
-      _contactkSocket = await _connectWithAuth(SocketPath.contact);
-      _addFriendSocket = await _connectWithAuth(SocketPath.addFriend);
-      _roomSocket = await _connectWithAuth(SocketPath.room);
-      _messageSocket = await _connectWithAuth(SocketPath.message);
-      // _listMessage = await _connectWithAuth(SocketPath.message);
-      _groupSocket = await _connectWithAuth(SocketPath.group);
-
-      _reportSocket = await _connectWithAuth(SocketPath.report);
-      _feedbackSocket = await _connectWithAuth(SocketPath.feedback);
-    }
+  static Future<void> initSocketConnection(String accessToken, String baseUrl) async {
+    baseSocketUrl = baseUrl;
+    token = accessToken;
+    _roomSocket = await _connectWithAuth(SocketPath.room);
+    _messageSocket = await _connectWithAuth(SocketPath.message);
   }
 
   static void destroyAllAuthSocketConnection() {
-    _profileSocket.destroy();
-    _addFriendSocket.destroy();
-    _deviceSocket.destroy();
-    _feedbackSocket.destroy();
     _roomSocket.destroy();
     _messageSocket.destroy();
-    _reportSocket.destroy();
-    _groupSocket.destroy();
-    _feedbackSocket.destroy();
-    // _listMessage.destroy();
-    _contactkSocket.destroy();
   }
 
   static Socket _switchNameSpace(String nameSpace) {
@@ -104,45 +78,11 @@ class BaseSocket {
     }
   }
 
-  static Future<Socket> _connectWithoutAuth(String nameSpace) async {
-    final completor = Completer<Socket>();
-    late Socket socket;
-    socket = io(
-      '${SocketPath.baseUrl}$nameSpace',
-      OptionBuilder().setTransports(['websocket']).disableAutoConnect().build(),
-    );
-    try {
-      socket.connect();
-      completor.complete(socket);
-    } catch (e) {
-      completor.completeError(e);
-    }
-
-    socket.on('error', (data) async {
-      log(data.toString(), name: 'without error');
-    });
-
-    socket.onConnect((_) {
-      log('connect nameSpace:$nameSpace', name: 'Basesocket');
-    });
-    socket.onDisconnect((e) {
-      log('disconnec:$nameSpace', name: 'Basesocket');
-    });
-    return completor.future;
-  }
-
   static Future<Socket> _connectWithAuth(String nameSpace) async {
     final completor = Completer<Socket>();
-
-    String token;
     late Socket socket;
-    if (StorageToken.isAccessTokenExist()) {
-      token = StorageToken.readToken();
-    } else {
-      throw ErrorDescription('token does not exist');
-    }
     socket = io(
-      '${SocketPath.baseUrl}$nameSpace',
+      '$baseSocketUrl$nameSpace',
       OptionBuilder()
           .setTransports(['websocket'])
           .disableAutoConnect()
@@ -153,19 +93,17 @@ class BaseSocket {
           .build(),
     );
 
-    socket.on('error', (data) async {
-      if (data['message'] == 'token expired') {
-      } else if (data['message'] == 'unauthorized') {
-        // tmp solution
-        await StorageToken.removeTokenFromStorage();
-        await Get.deleteAll();
-        BaseSocket.destroyAllAuthSocketConnection();
-        //TODO: remove
+    socket.on('error', (error) async {
+      print('socket error:$error');
+      if (error['message'] == 'token expired') {
+      } else if (error['message'] == 'unauthorized') {
+        // BaseSocket.destroyAllAuthSocketConnection();
       }
     });
 
     try {
       socket.connect();
+      print(socket.nsp);
       completor.complete(socket);
     } catch (e) {
       completor.completeError(socket);

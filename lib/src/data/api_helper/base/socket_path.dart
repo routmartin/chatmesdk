@@ -165,7 +165,7 @@ class SocketPath {
   static const String addSticker = 'message:addSticker';
   static const String viewEachSticker = 'message:viewSticker';
   static const String removeSticker = 'message:removeSticker';
-  static const String recentUsedSticker = 'message:recentUseSticker';
+  static const String recentUsedSticker = 'message:recentUsed';
 
   //*call
   static const String audioCall = 'message:requestVoiceCall';

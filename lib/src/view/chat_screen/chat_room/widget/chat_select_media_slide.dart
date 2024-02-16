@@ -1,10 +1,11 @@
-import 'package:chatme/util/constant/app_asset.dart';
 import 'package:easy_debounce/easy_debounce.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:get/get.dart';
 import 'package:video_player/video_player.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
+
+import '../../../../util/theme/app_color.dart';
 
 class ChatSelectMediaSlide extends StatefulWidget {
   const ChatSelectMediaSlide({Key? key, required this.images}) : super(key: key);
@@ -50,7 +51,7 @@ class _ChatSelectMediaSlideState extends State<ChatSelectMediaSlide> {
               if (widget.images[pageIndex].type == AssetType.video) {
                 EasyDebounce.debounce(
                   'initVideoDebounce',
-                  Duration(milliseconds: 500),
+                  const Duration(milliseconds: 500),
                   () {
                     if (isPlayerLoad) {
                       _videoPlayerController.dispose();
@@ -62,7 +63,7 @@ class _ChatSelectMediaSlideState extends State<ChatSelectMediaSlide> {
               if (scrollMiniMediaController.position.userScrollDirection == ScrollDirection.idle) {
                 await scrollMiniMediaController.animateTo(
                   pageIndex * (miniMediaWidth + 4) - 30,
-                  duration: Duration(milliseconds: 300),
+                  duration: const Duration(milliseconds: 300),
                   curve: Curves.fastOutSlowIn,
                 );
                 setState(() {});
@@ -86,17 +87,17 @@ class _ChatSelectMediaSlideState extends State<ChatSelectMediaSlide> {
                                   crossFadeState: _videoPlayerController.value.isPlaying
                                       ? CrossFadeState.showFirst
                                       : CrossFadeState.showSecond,
-                                  duration: Duration(milliseconds: 400),
+                                  duration: const Duration(milliseconds: 400),
                                   firstChild: AnimatedOpacity(
                                     opacity: isVisiblePause ? 1 : 0,
-                                    duration: Duration(milliseconds: 500),
+                                    duration: const Duration(milliseconds: 500),
                                     child: Container(
-                                      padding: EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: const BoxDecoration(
                                         color: Colors.white70,
                                         shape: BoxShape.circle,
                                       ),
-                                      child: Icon(
+                                      child: const Icon(
                                         Icons.pause,
                                         color: AppColors.primaryColor,
                                         size: 40,
@@ -104,12 +105,12 @@ class _ChatSelectMediaSlideState extends State<ChatSelectMediaSlide> {
                                     ),
                                   ),
                                   secondChild: Container(
-                                    padding: EdgeInsets.all(12),
-                                    decoration: BoxDecoration(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: const BoxDecoration(
                                       color: Colors.white70,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: Icon(
+                                    child: const Icon(
                                       Icons.play_arrow,
                                       color: AppColors.primaryColor,
                                       size: 40,
@@ -120,7 +121,7 @@ class _ChatSelectMediaSlideState extends State<ChatSelectMediaSlide> {
                             ),
                           ],
                         )
-                      : CircularProgressIndicator.adaptive(),
+                      : const CircularProgressIndicator.adaptive(),
                 );
               }
               return GestureDetector(
@@ -143,7 +144,7 @@ class _ChatSelectMediaSlideState extends State<ChatSelectMediaSlide> {
           bottom: 0,
           child: AnimatedOpacity(
             opacity: isShowMiniList ? 1 : 0,
-            duration: Duration(milliseconds: 300),
+            duration: const Duration(milliseconds: 300),
             child: Visibility(
               visible: isShowMiniList && widget.images.length > 1,
               child: Container(
@@ -168,8 +169,8 @@ class _ChatSelectMediaSlideState extends State<ChatSelectMediaSlide> {
                       },
                       child: AnimatedContainer(
                         curve: Curves.easeOutCirc,
-                        duration: Duration(milliseconds: 500),
-                        margin: EdgeInsets.symmetric(horizontal: 2),
+                        duration: const Duration(milliseconds: 500),
+                        margin: const EdgeInsets.symmetric(horizontal: 2),
                         width: selectedIndex == index ? miniMediaWidth * 2 : miniMediaWidth,
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(10),
@@ -189,12 +190,12 @@ class _ChatSelectMediaSlideState extends State<ChatSelectMediaSlide> {
                                   color: Colors.black,
                                   child: Center(
                                       child: Container(
-                                    padding: EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
+                                    padding: const EdgeInsets.all(2),
+                                    decoration: const BoxDecoration(
                                       color: Colors.white70,
                                       shape: BoxShape.circle,
                                     ),
-                                    child: Icon(
+                                    child: const Icon(
                                       Icons.play_arrow,
                                       color: AppColors.primaryColor,
                                       size: 20,
@@ -220,7 +221,7 @@ class _ChatSelectMediaSlideState extends State<ChatSelectMediaSlide> {
         isVisiblePause = true;
         isShowMiniList = true;
       });
-      await Future.delayed(Duration(milliseconds: 1400), () {
+      await Future.delayed(const Duration(milliseconds: 1400), () {
         setState(() {
           isVisiblePause = false;
           isShowMiniList = false;
@@ -261,7 +262,7 @@ class _ChatSelectMediaSlideState extends State<ChatSelectMediaSlide> {
         _videoPlayerController.play();
         isShowMiniList = false;
       });
-      Future.delayed(Duration(milliseconds: 1400), () {
+      Future.delayed(const Duration(milliseconds: 1400), () {
         setState(() {
           isVisiblePause = false;
         });
@@ -277,7 +278,7 @@ class _ChatSelectMediaSlideState extends State<ChatSelectMediaSlide> {
         if (_videoPlayerController.value.position == _videoPlayerController.value.duration) {
           setState(() {
             _videoPlayerController.pause();
-            _videoPlayerController.seekTo(Duration(milliseconds: 0));
+            _videoPlayerController.seekTo(const Duration(milliseconds: 0));
             isVisiblePause = true;
             isShowMiniList = true;
           });

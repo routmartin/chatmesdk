@@ -1,21 +1,17 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:chatme/data/image_controller/image_controller.dart';
-import 'package:chatme/data/share_contact/share_contact_controller.dart';
-import 'package:chatme/routes/app_routes.dart';
-import 'package:chatme/util/helper/cache_mananger_helper.dart';
-import 'package:chatme/util/text_style.dart';
-import 'package:chatme/util/theme/app_color.dart';
-import 'package:chatme/widgets/cupertino/icon_dialog.dart';
-import 'package:chatme/widgets/loading/base_dialog_loading.dart';
+import '../../../util/helper/cache_mananger_helper.dart';
+import '../../../util/text_style.dart';
+import '../../../util/theme/app_color.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
 import 'package:get/get.dart';
 import 'package:mno_zoom_widget/zoom_widget.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+
 import 'package:video_player/video_player.dart';
 import 'package:dio/dio.dart' as dio;
 
@@ -93,7 +89,7 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
         widget.fileUrl,
         onDownloadChange: (percentage) async {
           if (percentage == 100) {
-            await Future.delayed(Duration(milliseconds: 300));
+            await Future.delayed(const Duration(milliseconds: 300));
             var downloadFile = await CacheManagerHelper.instance.getFileFromCache(widget.fileUrl);
             if (mounted) {
               setState(() {
@@ -121,7 +117,7 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
           onPressed: () {
             Get.back();
           },
-          icon: Icon(Icons.arrow_back_ios),
+          icon: const Icon(Icons.arrow_back_ios),
           color: Colors.grey,
         ),
         actions: [
@@ -129,7 +125,7 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
             onPressed: () {
               showMoreModalSheet();
             },
-            icon: Icon(Icons.more_horiz),
+            icon: const Icon(Icons.more_horiz),
             color: Colors.grey,
           )
         ],
@@ -138,7 +134,7 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
           maxLines: 1,
           textAlign: TextAlign.center,
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(color: Colors.black, fontWeight: FontWeight.w500, fontSize: 20),
+          style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w500, fontSize: 20),
         ),
       ),
       body: Container(color: AppColors.lightGrayBackground, child: _viewContent()),
@@ -158,7 +154,7 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
         if (_videoPlayerController.value.position == _videoPlayerController.value.duration) {
           setState(() {
             _videoPlayerController.pause();
-            _videoPlayerController.seekTo(Duration(milliseconds: 0));
+            _videoPlayerController.seekTo(const Duration(milliseconds: 0));
             isVisiblePause = true;
           });
         }
@@ -193,7 +189,7 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
     bool isVideo = _checkIsVideo();
 
     if (showLoading) {
-      return Center(
+      return const Center(
         child: CircularProgressIndicator.adaptive(
           backgroundColor: Colors.grey,
         ),
@@ -221,17 +217,17 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
                         crossFadeState: _videoPlayerController.value.isPlaying
                             ? CrossFadeState.showFirst
                             : CrossFadeState.showSecond,
-                        duration: Duration(milliseconds: 400),
+                        duration: const Duration(milliseconds: 400),
                         firstChild: AnimatedOpacity(
                           opacity: isVisiblePause ? 1 : 0,
-                          duration: Duration(milliseconds: 500),
+                          duration: const Duration(milliseconds: 500),
                           child: Container(
-                            padding: EdgeInsets.all(12),
-                            decoration: BoxDecoration(
+                            padding: const EdgeInsets.all(12),
+                            decoration: const BoxDecoration(
                               color: Colors.white70,
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(
+                            child: const Icon(
                               Icons.pause,
                               color: AppColors.primaryColor,
                               size: 40,
@@ -239,12 +235,12 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
                           ),
                         ),
                         secondChild: Container(
-                          padding: EdgeInsets.all(12),
-                          decoration: BoxDecoration(
+                          padding: const EdgeInsets.all(12),
+                          decoration: const BoxDecoration(
                             color: Colors.white70,
                             shape: BoxShape.circle,
                           ),
-                          child: Icon(
+                          child: const Icon(
                             Icons.play_arrow,
                             color: AppColors.primaryColor,
                             size: 40,
@@ -255,7 +251,7 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
                   ),
                 ],
               )
-            : CircularProgressIndicator.adaptive(
+            : const CircularProgressIndicator.adaptive(
                 backgroundColor: Colors.grey,
               ),
       );
@@ -276,13 +272,13 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
         canvasColor: Colors.transparent,
         initZoom: 0,
         child: Dismissible(
-          key: Key('swipe_down'),
+          key: const Key('swipe_down'),
           direction: DismissDirection.vertical,
           onDismissed: (_) {
             Get.back();
           },
-          movementDuration: Duration(milliseconds: 10),
-          dismissThresholds: {
+          movementDuration: const Duration(milliseconds: 10),
+          dismissThresholds: const {
             DismissDirection.endToStart: 0.4,
           },
           onUpdate: (details) {
@@ -339,13 +335,13 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
             ),
             child: Text(
               widget.fileType,
-              style:
-                  TextStyle(color: Colors.blue, fontSize: 22, fontWeight: FontWeight.bold, overflow: TextOverflow.clip),
+              style: const TextStyle(
+                  color: Colors.blue, fontSize: 22, fontWeight: FontWeight.bold, overflow: TextOverflow.clip),
             ),
           ),
           const SizedBox(height: 8),
           Container(
-            margin: EdgeInsets.symmetric(
+            margin: const EdgeInsets.symmetric(
               horizontal: 24,
             ),
             child: Text(
@@ -366,7 +362,7 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
       setState(() {
         isVisiblePause = true;
       });
-      await Future.delayed(Duration(milliseconds: 1400), () {
+      await Future.delayed(const Duration(milliseconds: 1400), () {
         setState(() {
           isVisiblePause = false;
         });
@@ -388,7 +384,7 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
       setState(() {
         _videoPlayerController.play();
       });
-      Future.delayed(Duration(milliseconds: 1400), () {
+      Future.delayed(const Duration(milliseconds: 1400), () {
         setState(() {
           isVisiblePause = false;
         });
@@ -402,59 +398,46 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
       isScrollControlled: false,
       context: Get.context!,
       builder: (BuildContext context) => Container(
-        margin: EdgeInsets.only(bottom: 25, left: 16, right: 16),
+        margin: const EdgeInsets.only(bottom: 25, left: 16, right: 16),
         child: ListView(
           shrinkWrap: true,
           children: [
-            InkWell(
-              onTap: _saveFileToDownload,
-              child: Container(
-                height: 60,
-                padding: EdgeInsets.symmetric(horizontal: 20),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(4),
-                    topRight: Radius.circular(4),
-                  ),
+            Container(
+              height: 60,
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(4),
+                  topRight: Radius.circular(4),
                 ),
-                child: Text('save_to_file'.tr, textAlign: TextAlign.center, style: AppTextStyle.normalBold),
               ),
+              child: Text('save_to_file'.tr, textAlign: TextAlign.center, style: AppTextStyle.normalBold),
             ),
             Container(height: .8, color: Colors.grey),
-            InkWell(
-              onTap: () {
-                sentToChat();
-              },
-              child: Container(
-                height: 60,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                ),
-                child: Text('send_to_chat'.tr, style: AppTextStyle.normalBold),
+            Container(
+              height: 60,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Colors.white,
               ),
+              child: Text('send_to_chat'.tr, style: AppTextStyle.normalBold),
             ),
             Container(height: .8, color: Colors.grey),
-            InkWell(
-              onTap: () {
-                openInOtherApp();
-              },
-              child: Container(
-                height: 60,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(4),
-                    bottomRight: Radius.circular(4),
-                  ),
+            Container(
+              height: 60,
+              alignment: Alignment.center,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  bottomLeft: Radius.circular(4),
+                  bottomRight: Radius.circular(4),
                 ),
-                child: Text('open_in_other_app'.tr, style: AppTextStyle.normalBold),
               ),
+              child: Text('open_in_other_app'.tr, style: AppTextStyle.normalBold),
             ),
-            SizedBox(height: 8),
+            const SizedBox(height: 8),
             InkWell(
               onTap: () {
                 Navigator.pop(context);
@@ -462,7 +445,7 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
               child: Container(
                 height: 60,
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
                     bottomLeft: Radius.circular(4),
@@ -471,7 +454,7 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
                 ),
                 child: Text(
                   'cancel'.tr,
-                  style: TextStyle(color: Colors.red, fontSize: 16, fontWeight: FontWeight.w500),
+                  style: const TextStyle(color: Colors.red, fontSize: 16, fontWeight: FontWeight.w500),
                 ),
               ),
             ),
@@ -479,60 +462,5 @@ class _ViewFileScreenState extends State<ViewFileScreen> {
         ),
       ),
     );
-  }
-
-  void openInOtherApp() async {
-    Get.back();
-    BaseDialogLoading.show();
-    final filename = widget.fileUrl.substring(widget.fileUrl.lastIndexOf('/') + 1);
-    var cacheFile = await CacheManagerHelper.instance.getFileFromCache(widget.fileUrl);
-
-    try {
-      if (cacheFile != null) {
-        BaseDialogLoading.dismiss();
-        await Share.shareXFiles([XFile(cacheFile.file.path)]);
-      } else {
-        await createFileOfUrl().then((f) {
-          BaseDialogLoading.dismiss();
-          Share.shareXFiles([XFile(f.path)]);
-        });
-      }
-    } catch (_) {
-      BaseDialogLoading.dismiss();
-    }
-  }
-
-  void sentToChat() {
-    Get.back();
-    Get.put(ShareContactController());
-    Get.find<ShareContactController>().getFileIdFromFileView(widget.fileId);
-    Get.toNamed(Routes.share_contact_screen)!.then((_) {
-      Get.find<ShareContactController>().fileSendFromViewFileScreen = '';
-    });
-  }
-
-  void _saveFileToDownload() async {
-    Get.back();
-    var cacheFile = await CacheManagerHelper.instance.getFileFromCache(widget.fileUrl);
-
-    final bool isSuccess =
-        await Get.find<ImageController>().saveFileToSpecificFolder(widget.fileUrl, cacheFile?.file, widget.fileName);
-    if (isSuccess) {
-      await showDialog(
-          barrierDismissible: false,
-          context: context,
-          builder: (ctx) {
-            Future.delayed(Duration(milliseconds: 1000), () {
-              Navigator.of(context).pop();
-            });
-
-            return Scaffold(
-              backgroundColor: Colors.transparent,
-              body: Center(
-                child: CupertinoDialogIcon(text: 'saved'),
-              ),
-            );
-          });
-    }
   }
 }

@@ -1,15 +1,19 @@
 import 'dart:async';
 import 'dart:io';
-import 'package:chatme/data/chat_room/chat_room_message_controller.dart';
-import 'package:chatme/data/upload_message/upload_message_controller.dart';
-import 'package:chatme/template/chat_screen/chat_room/widget/chat_select_media_slide.dart';
-import 'package:chatme/util/constant/app_asset.dart';
-import 'package:chatme/util/helper/message_upload_helper.dart';
-import 'package:chatme/widgets/fair_binding_widget/widget_binding_selection.dart';
-import 'package:chatme/widgets/loading/base_dialog_loading.dart';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../../data/chat_room/chat_room.dart';
+import '../../../data/upload_controller.dart';
+import '../../../util/constant/app_assets.dart';
+import '../../../util/helper/font_util.dart';
+import '../../../util/helper/message_upload_helper.dart';
+import '../../../util/theme/app_color.dart';
+import '../../widget/base_share_widget.dart';
+import '../../widget/binding_selection.dart';
+import 'widget/chat_select_media_slide.dart';
 
 class ChatSelectMediaScreen extends StatefulWidget {
   const ChatSelectMediaScreen({Key? key}) : super(key: key);
@@ -37,7 +41,7 @@ class _ChatSelectMediaScreenState extends State<ChatSelectMediaScreen> {
               InkWell(
                 onTap: _onBack,
                 child: Padding(
-                  padding: EdgeInsets.all(15),
+                  padding: const EdgeInsets.all(15),
                   child: Image.asset(
                     Assets.app_assetsIconsSearchBackButton,
                     color: Colors.white,
@@ -69,12 +73,12 @@ class _ChatSelectMediaScreenState extends State<ChatSelectMediaScreen> {
                       onChanged: _toggleSentAsFile,
                       isWidgetShow: true,
                     ),
-                    SizedBox(width: 6),
+                    const SizedBox(width: 6),
                     InkWell(
                       onTap: _toggleSentAsFile,
                       child: Text(
                         'send_as_a_file'.tr,
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.white,
                           fontSize: 16,
                         ),
@@ -100,7 +104,7 @@ class _ChatSelectMediaScreenState extends State<ChatSelectMediaScreen> {
                           autofocus: false,
                           maxLines: null,
                           maxLength: 100,
-                          toolbarOptions: ToolbarOptions(
+                          toolbarOptions: const ToolbarOptions(
                             copy: true,
                             cut: true,
                             selectAll: true,
@@ -110,8 +114,8 @@ class _ChatSelectMediaScreenState extends State<ChatSelectMediaScreen> {
                           cursorColor: AppColors.primaryColor,
                           onChanged: (_) {},
                           decoration: InputDecoration(
-                            counter: SizedBox(),
-                            contentPadding: EdgeInsets.only(left: 16, top: 26),
+                            counter: const SizedBox(),
+                            contentPadding: const EdgeInsets.only(left: 16, top: 26),
                             hintText: 'add_a_caption'.tr,
                             filled: true,
                             fillColor: Colors.white,
@@ -128,16 +132,16 @@ class _ChatSelectMediaScreenState extends State<ChatSelectMediaScreen> {
                           ),
                         ),
                       ),
-                      SizedBox(width: 10),
+                      const SizedBox(width: 10),
                       InkWell(
                         onTap: _onSentMediaMessage,
                         child: Container(
-                          margin: EdgeInsets.only(bottom: 6),
+                          margin: const EdgeInsets.only(bottom: 6),
                           height: 30,
                           width: 30,
                           child: Image.asset(
                             Assets.app_assetsIconsChatSentIcon,
-                            color: Color(0xff4882B8),
+                            color: const Color(0xff4882B8),
                           ),
                         ),
                       ),
@@ -205,9 +209,9 @@ class _ChatSelectMediaScreenState extends State<ChatSelectMediaScreen> {
             shrinkWrap: true,
             children: [
               Container(
-                padding: EdgeInsets.all(16),
+                padding: const EdgeInsets.all(16),
                 alignment: Alignment.center,
-                decoration: BoxDecoration(
+                decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
                     topLeft: Radius.circular(4),
@@ -245,8 +249,8 @@ class _ChatSelectMediaScreenState extends State<ChatSelectMediaScreen> {
                 onTap: Get.back,
                 child: Container(
                   alignment: Alignment.center,
-                  padding: EdgeInsets.all(16),
-                  decoration: BoxDecoration(
+                  padding: const EdgeInsets.all(16),
+                  decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.only(
                       bottomLeft: Radius.circular(4),
@@ -270,8 +274,8 @@ class _ChatSelectMediaScreenState extends State<ChatSelectMediaScreen> {
   }
 
   Widget popMenuItem(String icon, String text) => Container(
-        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-        decoration: BoxDecoration(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        decoration: const BoxDecoration(
           border: Border(
             bottom: BorderSide(width: 1, color: Colors.grey),
           ),

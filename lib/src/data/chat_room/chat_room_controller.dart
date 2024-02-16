@@ -5,7 +5,6 @@ import 'package:chatmesdk/src/util/helper/crash_report.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:socket_io_client/socket_io_client.dart';
-
 import '../../util/helper/scroll_to_top.dart';
 import '../api_helper/base/base.dart';
 import 'model/chat_model/chat_room_model.dart';
@@ -13,7 +12,7 @@ import 'model/chat_model/chat_room_response_model.dart';
 import 'model/chat_model/sticker.dart';
 import 'model/listen_message_response_model.dart';
 import 'model/listen_room_model.dart';
-import 'model/mark_as_read_response_model/mark_as_read_response_model.dart';
+import 'model/chat_model/mark_as_read_response_model.dart';
 
 class ChatRoomController extends GetxController with WidgetsBindingObserver, GetSingleTickerProviderStateMixin {
   late Socket _socket;
@@ -73,6 +72,7 @@ class ChatRoomController extends GetxController with WidgetsBindingObserver, Get
     _socket = await BaseSocket.initConnectWithHeader(SocketPath.room);
     _receiveMessage = await BaseSocket.initConnectWithHeader(SocketPath.message);
     _initAllEventListener();
+    getAllPersonRoom();
 
     //* do not put the code under this function as it will not run
     // await initPlayAndRecorder();
@@ -90,7 +90,6 @@ class ChatRoomController extends GetxController with WidgetsBindingObserver, Get
     _listenTypingEvent();
     _listenSeenMessage();
     _listenUnsentMessage();
-    _listenUploadingEvent();
     _listenOnRecordingEvent();
     _listenOnLineStatus();
 
@@ -100,16 +99,6 @@ class ChatRoomController extends GetxController with WidgetsBindingObserver, Get
   void getAllPersonRoom() async {
     chatRoomList = await _callToGetRooms(false) ?? [];
     update(['totalCount', 'list']);
-  }
-
-  void getAllGroupRoom() async {
-    groupRoomList = await _callToGetRooms(true) ?? [];
-    update(['totalCount', 'groupList']);
-  }
-
-  void getChatRoom() async {
-    getAllGroupRoom();
-    getAllPersonRoom();
   }
 
   /// [ isNeedPersonalListUpdate ]
@@ -377,10 +366,10 @@ class ChatRoomController extends GetxController with WidgetsBindingObserver, Get
 
         // check where to update the ui
         if (checkRoomInPayload != null && checkMessageInPayload != null) {
-          _listenLastMessageToUpdateRooms(data);
-          if (checkRoomInPayload['type'] == 'g') {
-            _listenLastMessageToUpdateGroupRooms(data);
-          }
+          // _listenLastMessageToUpdateRooms(data);
+          // if (checkRoomInPayload['type'] == 'g') {
+          //   _listenLastMessageToUpdateGroupRooms(data);
+          // }
         }
         if (checkRoomInPayload['_id'] != trckRoomIn) {
           await getTotalUnreadCount();
@@ -587,7 +576,7 @@ class ChatRoomController extends GetxController with WidgetsBindingObserver, Get
           final message = e.toString();
           await CrashReport.send(ReportModel(message: message));
           if (groupRoomList.isEmpty) {
-            getAllGroupRoom();
+            // getAllGroupRoom();
             rethrow;
           }
           log('updateRoomList from listen error: indexToUpdate $indexOfGroupRoomToUpdate :$e');
@@ -996,7 +985,7 @@ class ChatRoomController extends GetxController with WidgetsBindingObserver, Get
       case AppLifecycleState.inactive:
         break;
       case AppLifecycleState.resumed:
-        getAllGroupRoom();
+        // getAllGroupRoom();
         getAllPersonRoom();
         break;
       case AppLifecycleState.paused:

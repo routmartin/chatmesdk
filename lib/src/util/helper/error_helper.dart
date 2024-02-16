@@ -1,7 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:get/get.dart';
 
-import '../../view/widget/widget_share.dart';
+import '../../view/widget/base_share_widget.dart';
 import '../theme/app_color.dart';
 
 class ErrorHelper {

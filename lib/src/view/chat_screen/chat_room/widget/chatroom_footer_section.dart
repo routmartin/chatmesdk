@@ -1,15 +1,16 @@
 import 'dart:io';
 
-import 'package:chatme/data/chat_room/chat_room_message_controller.dart';
-import 'package:chatme/data/group_room/group_message_controller.dart';
-import 'package:chatme/data/image_controller/image_controller.dart';
-import 'package:chatme/data/upload_message/upload_message_controller.dart';
-import 'package:chatme/util/constant/app_asset.dart';
-import 'package:chatme/util/helper/message_upload_helper.dart';
-import 'package:chatme/util/text_style.dart';
-import 'package:chatme/widgets/cupertino/cupertino_dialog.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+
+import '../../../../data/chat_room/chat_room.dart';
+import '../../../../data/image_controller.dart';
+import '../../../../data/upload_controller.dart';
+import '../../../../util/constant/app_assets.dart';
+import '../../../../util/helper/message_upload_helper.dart';
+import '../../../../util/text_style.dart';
+import '../../../../util/theme/app_color.dart';
 
 class ChatroomFooterSection extends StatefulWidget {
   const ChatroomFooterSection({
@@ -44,7 +45,7 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
     return InkWell(
       onTap: _onSelectFile,
       child: Container(
-        padding: EdgeInsets.only(left: 40),
+        padding: const EdgeInsets.only(left: 40),
         width: double.maxFinite,
         color: AppColors.txtSeconddaryColor,
         child: SafeArea(
@@ -82,8 +83,11 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
       var hasOverSizeFile = files.any((element) => element.lengthSync() / (1024 * 1024) > 300);
 
       if (hasOverSizeFile) {
-        cupertinoDialog(context,
-            widget: Column(
+        // ignore: use_build_context_synchronously
+        return showCupertinoDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            content: Column(
               children: [
                 Image.asset(
                   Assets.app_assetsIconsWarningSign,
@@ -91,9 +95,10 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
                 ),
               ],
             ),
-            content: 'file_too_large'.tr + '\n' + 'please_select_a_file_under_300mb.'.tr,
-            buttonText: 'ok'.tr);
+          ),
+        );
       } else {
+        // ignore: use_build_context_synchronously
         showSendDialog(context);
       }
     }
@@ -107,11 +112,11 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
         context: context,
         barrierDismissible: true,
         builder: (ctx) {
-          return GetBuilder<ImageController>(builder: (_controller) {
-            List<File>? filesToShare = _controller.pickedFiles;
+          return GetBuilder<ImageController>(builder: (controller) {
+            List<File>? filesToShare = controller.pickedFiles;
             return AlertDialog(
               insetPadding: EdgeInsets.zero,
-              contentPadding: EdgeInsets.symmetric(horizontal: 12),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 12),
               titlePadding: EdgeInsets.zero,
               buttonPadding: EdgeInsets.zero,
               actionsPadding: EdgeInsets.zero,
@@ -133,7 +138,7 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
                     Column(
                       mainAxisAlignment: MainAxisAlignment.start,
                       children: [
-                        SizedBox(height: 24),
+                        const SizedBox(height: 24),
                         Flexible(
                           child: Container(
                             child: SingleChildScrollView(
@@ -142,8 +147,8 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
                                   ...List.generate(
                                     filesToShare.length,
                                     (index) {
-                                      String _fileName = MessageUploadHelper().getFileName(filesToShare[index]);
-                                      String _extension = MessageUploadHelper().getFileExtension(filesToShare[index]);
+                                      String fileName = MessageUploadHelper().getFileName(filesToShare[index]);
+                                      String extension = MessageUploadHelper().getFileExtension(filesToShare[index]);
                                       return Container(
                                         margin: const EdgeInsets.symmetric(vertical: 2.0),
                                         height: 58,
@@ -156,33 +161,33 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
                                             width: 50,
                                             decoration: BoxDecoration(
                                               border: Border.all(
-                                                color: Color(0xff4882B8),
+                                                color: const Color(0xff4882B8),
                                                 width: 1,
                                               ),
                                               borderRadius: BorderRadius.circular(4),
                                             ),
                                             child: Text(
-                                              _extension.toUpperCase(),
+                                              extension.toUpperCase(),
                                               style: AppTextStyle.regularBoldBlue.copyWith(fontWeight: FontWeight.w600),
                                             ),
                                           ),
                                           title: Text(
-                                            _fileName,
+                                            fileName,
                                             style: AppTextStyle.normalTextMediumBlack,
                                             maxLines: 2,
                                           ),
                                           subtitle: Builder(builder: (context) {
-                                            var _fileSize =
+                                            var fileSize =
                                                 MessageUploadHelper().getFileSize(filesToShare[index].lengthSync());
 
-                                            return Text(_fileSize.toString(), style: AppTextStyle.smallTextRegularGray);
+                                            return Text(fileSize.toString(), style: AppTextStyle.smallTextRegularGray);
                                           }),
                                           trailing: Visibility(
                                             visible: filesToShare.length > 1,
                                             child: InkWell(
                                               onTap: () {
-                                                _controller.pickedFiles.removeAt(index);
-                                                _controller.update();
+                                                controller.pickedFiles.removeAt(index);
+                                                controller.update();
                                               },
                                               child: Image.asset(
                                                 Assets.app_assetsIconsIconTrash,
@@ -200,7 +205,7 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
                             ),
                           ),
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                         Visibility(
                           visible: filesToShare.length > 10,
                           child: Column(
@@ -211,12 +216,11 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
                                     Assets.app_assetsIconsWarningSign,
                                     scale: 8,
                                   ),
-                                  SizedBox(width: 4),
+                                  const SizedBox(width: 4),
                                   Expanded(
                                     child: Text(
-                                      '10_files_maximum._please_deselect_some_files_before_proceeding.'.tr +
-                                          ' (${filesToShare.length}/10)',
-                                      style: TextStyle(
+                                      '${'10_files_maximum._please_deselect_some_files_before_proceeding.'.tr} (${filesToShare.length}/10)',
+                                      style: const TextStyle(
                                         fontSize: 13.33,
                                         color: AppColors.red,
                                       ),
@@ -224,7 +228,7 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
                                   )
                                 ],
                               ),
-                              SizedBox(height: 12),
+                              const SizedBox(height: 12),
                             ],
                           ),
                         ),
@@ -234,10 +238,10 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
                               child: Container(
                                 decoration: BoxDecoration(
                                   border: Border.all(
-                                    color: Color(0xFFE1E2E6),
+                                    color: const Color(0xFFE1E2E6),
                                     width: 0.33,
                                   ),
-                                  color: Color(0xFFEBEBEB),
+                                  color: const Color(0xFFEBEBEB),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 height: 40,
@@ -246,11 +250,11 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
                                   autofocus: false,
                                   maxLength: 100,
                                   decoration: InputDecoration(
-                                    counter: SizedBox(),
-                                    contentPadding: EdgeInsets.fromLTRB(10, 0, 0, 10),
+                                    counter: const SizedBox(),
+                                    contentPadding: const EdgeInsets.fromLTRB(10, 0, 0, 10),
                                     border: InputBorder.none,
                                     hintText: 'add_a_caption...'.tr,
-                                    hintStyle: TextStyle(color: Colors.grey),
+                                    hintStyle: const TextStyle(color: Colors.grey),
                                   ),
                                 ),
                               ),
@@ -270,7 +274,7 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
                             ),
                           ],
                         ),
-                        SizedBox(height: 12),
+                        const SizedBox(height: 12),
                       ],
                     ),
                     Positioned(
@@ -297,8 +301,7 @@ class _ChatroomFooterSectionState extends State<ChatroomFooterSection> with Sing
     String? caption,
   ) async {
     var pickedFiles = Get.find<ImageController>().pickedFiles;
-    var tagRoomId =
-        widget.isGroup ? Get.find<GroupMessageController>().roomId : Get.find<ChatRoomMessageController>().roomId;
+    var tagRoomId = Get.find<ChatRoomMessageController>().roomId;
     Get.lazyPut(() => UploadMessageController(), tag: tagRoomId);
     var uploadController = Get.find<UploadMessageController>(tag: tagRoomId);
     var fileIds = List<String>.generate(pickedFiles.length, (i) => '${i + 1}');

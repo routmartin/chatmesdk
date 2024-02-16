@@ -1,24 +1,24 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:chatme/data/chat_room/chat_room_message_controller.dart';
-import 'package:chatme/data/chat_room/model/message_response_model.dart';
-import 'package:chatme/data/sticker_controlller/sticker_controller.dart';
-import 'package:chatme/template/chat_screen/chat_room/widget/message_item.dart';
-import 'package:chatme/template/group/group_chat_room/widgets/group_chat_room_body.dart';
-import 'package:chatme/util/constant/app_asset.dart';
-import 'package:chatme/util/constant/app_constant.dart';
-import 'package:chatme/util/helper/media_helper.dart';
-import 'package:chatme/util/helper/message_helper.dart';
-import 'package:chatme/widgets/animation/animated_ease_out_message.dart';
-import 'package:chatme/widgets/chat/chat_scroll_to_buttom_button.dart';
-import 'package:chatme/widgets/fair_binding_widget/widget_binding_seperate_line.dart';
-import 'package:chatme/widgets/loading/base_dialog_loading.dart';
-import 'package:chatme/widgets/network_connection_text_widget%20copy.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:scrollview_observer/scrollview_observer.dart';
+
+import '../../../data/chat_room/chat_room.dart';
+import '../../../data/chat_room/model/message_response_model.dart';
+import '../../../data/sticker_controlller/sticker_controller.dart';
+import '../../../util/constant/app_assets.dart';
+
+import '../../../util/helper/media_helper.dart';
+import '../../../util/helper/message_helper.dart';
+import '../../../util/theme/app_color.dart';
+import '../../widget/animated_container.dart';
+import '../../widget/no_network_widget.dart';
+import '../../widget/scroll_to_bottom_button.dart';
+import '../../widget/seperate_line.dart';
+import 'widget/message_item.dart';
 
 class ChatRoomBody extends StatefulWidget {
   const ChatRoomBody({
@@ -30,182 +30,100 @@ class ChatRoomBody extends StatefulWidget {
 }
 
 class _ChatRoomBodyState extends State<ChatRoomBody> {
-  final GlobalKey _key = GlobalKey();
+  // final GlobalKey _key = GlobalKey();
   bool openPinMessage = false;
-  final ScrollController _pinScrollController = ScrollController();
+  // final ScrollController _pinScrollController = ScrollController();
 
   @override
   void initState() {
     super.initState();
-    _pinScrollController.addListener(onListenPinScroll);
   }
 
   @override
   Widget build(BuildContext context) {
     return GetBuilder<ChatRoomMessageController>(builder: (controller) {
       List<MessageModel> reversedList = List.from(controller.listMessage.reversed);
-      List<MessageModel> pinList = controller.listPinMessage;
-      int totalPins = controller.listPinMessageTotal;
+      // List<MessageModel> pinList = controller.listPinMessage;
+      // int totalPins = controller.listPinMessageTotal;
       bool isAutoScroll = controller.messageIdForAnimationPin != '' || controller.messageIdForAnimationMessage != '';
       return GestureDetector(
         onTap: onChatRoomBodyClick,
         child: Column(
           children: [
-            NetworkConnectionTextWidget(),
-            AnimatedSize(
-              curve: Curves.linear,
-              duration: Duration(milliseconds: 300),
-              child: pinList.isNotEmpty
-                  ? Container(
-                      key: _key,
-                      height: 40,
-                      margin: EdgeInsets.only(top: 2),
-                      width: double.maxFinite,
-                      padding: EdgeInsets.only(left: 2.5),
-                      decoration: BoxDecoration(
-                        color: AppColors.primaryColor,
-                        border: Border(
-                          bottom: BorderSide(
-                            width: 1,
-                            color: Colors.grey.shade300,
-                          ),
-                        ),
-                      ),
-                      child: Container(
-                        color: Colors.white,
-                        child: pinnedMessages(context, pinList, reversedList, totalPins),
-                      ),
-                    )
-                  : SizedBox(),
-            ),
-            Padding(
-              padding: EdgeInsets.symmetric(vertical: openPinMessage ? 8 : 0),
-              child: AnimatedSize(
-                curve: Curves.linear,
-                duration: Duration(milliseconds: 200),
-                child: SingleChildScrollView(
-                  child: Stack(
-                    children: [
-                      Container(
-                        height: openPinMessage
-                            ? pinList.length > 6
-                                ? 36 * 7
-                                : 36 * pinList.length.toDouble()
-                            : 0,
-                        child: ListView.builder(
-                          controller: _pinScrollController,
-                          padding: EdgeInsets.zero,
-                          itemCount: pinList.length,
-                          itemBuilder: (context, index) {
-                            var data = pinList[index];
-                            return SizedBox(
-                              height: 36,
-                              child: Padding(
-                                padding: const EdgeInsets.only(left: 15),
-                                child: InkWell(
-                                  onTap: () => _onSelectPinMessage(reversedList, data, index, false),
-                                  child: Row(
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Image.asset(
-                                        Assets.app_assetsIconsPinRight,
-                                        width: 16.0,
-                                        height: 16.0,
-                                        color: AppColors.red,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Row(
-                                        children: [
-                                          ConstrainedBox(
-                                            constraints: BoxConstraints(maxWidth: 70),
-                                            child: Text(
-                                              '${data.sender?.name}',
-                                              style: TextStyle(
-                                                color: AppColors.txtSeconddaryColor,
-                                                fontSize: 13,
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          Text(
-                                            ': ',
-                                            style: TextStyle(
-                                              color: AppColors.txtSeconddaryColor,
-                                              fontSize: 13,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      if (data.id != null)
-                                        Expanded(
-                                          flex: 1,
-                                          child: Text(
-                                            MessageHelper.checkPinMessageType(data),
-                                            style: TextStyle(
-                                              color: Color(0xFF787878),
-                                              fontSize: 13,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      InkWell(
-                                          onTap: () => _onSelectUnpin(data.id!, pinList),
-                                          child: Padding(
-                                            padding: const EdgeInsets.symmetric(horizontal: 15.0, vertical: 8),
-                                            child: Text('unpin'.tr,
-                                                style: TextStyle(
-                                                  color: AppColors.primaryColor,
-                                                  fontSize: 13,
-                                                )),
-                                          ))
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                      Positioned.fill(
-                        child: Visibility(
-                          visible: openPinMessage && controller.pinMessageLoading,
-                          child: Align(
-                            alignment: Alignment.bottomCenter,
-                            child: Padding(
-                              padding: const EdgeInsets.all(2.0),
-                              child: SizedBox(
-                                  width: 12,
-                                  height: 12,
-                                  child: CircularProgressIndicator.adaptive(
-                                    strokeWidth: 2,
-                                  )),
-                            ),
-                          ),
-                        ),
-                      )
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            Visibility(
-                visible: controller.isBeforeMessageLoadMore,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: CircularProgressIndicator.adaptive(),
-                )),
+            const NetworkConnectionTextWidget(),
+            // AnimatedSize(
+            //   curve: Curves.linear,
+            //   duration: const Duration(milliseconds: 300),
+            //   child: pinList.isNotEmpty
+            //       ? Container(
+            //           key: _key,
+            //           height: 40,
+            //           margin: const EdgeInsets.only(top: 2),
+            //           width: double.maxFinite,
+            //           padding: const EdgeInsets.only(left: 2.5),
+            //           decoration: BoxDecoration(
+            //             color: AppColors.primaryColor,
+            //             border: Border(
+            //               bottom: BorderSide(
+            //                 width: 1,
+            //                 color: Colors.grey.shade300,
+            //               ),
+            //             ),
+            //           ),
+            //           child: Container(
+            //             color: Colors.white,
+            //             child: pinnedMessages(context, pinList, reversedList, totalPins),
+            //           ),
+            //         )
+            //       : const SizedBox(),
+            // ),
+            // Padding(
+            //   padding: EdgeInsets.symmetric(vertical: openPinMessage ? 8 : 0),
+            //   child: AnimatedSize(
+            //     curve: Curves.linear,
+            //     duration: const Duration(milliseconds: 200),
+            //     child: SingleChildScrollView(
+            //       child: Stack(
+            //         children: [
+            //           Positioned.fill(
+            //             child: Visibility(
+            //               visible: openPinMessage && controller.pinMessageLoading,
+            //               child: const Align(
+            //                 alignment: Alignment.bottomCenter,
+            //                 child: Padding(
+            //                   padding: EdgeInsets.all(2.0),
+            //                   child: SizedBox(
+            //                       width: 12,
+            //                       height: 12,
+            //                       child: CircularProgressIndicator.adaptive(
+            //                         strokeWidth: 2,
+            //                       )),
+            //                 ),
+            //               ),
+            //             ),
+            //           )
+            //         ],
+            //       ),
+            //     ),
+            //   ),
+            // ),
+            // Visibility(
+            //   visible: controller.isBeforeMessageLoadMore,
+            //   child: const Padding(
+            //     padding: EdgeInsets.all(8.0),
+            //     child: CircularProgressIndicator.adaptive(),
+            //   ),
+            // ),
             Expanded(
               child: Stack(
                 children: [
                   controller.isLoading
-                      ? Center(child: CircularProgressIndicator.adaptive())
+                      ? const Center(child: CircularProgressIndicator.adaptive())
                       : reversedList.isEmpty
                           ? Center(
                               child: Text(
                                 'no_message_here_yet..'.tr,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: Color(0xff787878),
                                   fontWeight: FontWeight.w400,
                                   fontSize: 13.3,
@@ -219,8 +137,8 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
                               child: ListView.builder(
                                 key: PageStorageKey(controller.roomId),
                                 controller: controller.scrollListController,
-                                padding: EdgeInsets.fromLTRB(0, 12, 0, 0),
-                                physics: isAutoScroll ? ClampingScrollPhysics() : BouncingScrollPhysics(),
+                                padding: const EdgeInsets.fromLTRB(0, 12, 0, 0),
+                                physics: isAutoScroll ? const ClampingScrollPhysics() : const BouncingScrollPhysics(),
                                 reverse: true,
                                 addAutomaticKeepAlives: true,
                                 itemCount: reversedList.length,
@@ -251,7 +169,7 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
                       },
                       child: ColoredBox(
                         color: AppColors.black,
-                        child: openPinMessage ? SizedBox.expand() : SizedBox.shrink(),
+                        child: openPinMessage ? const SizedBox.expand() : const SizedBox.shrink(),
                       ),
                     ),
                   ),
@@ -265,8 +183,8 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
             ),
             Visibility(
                 visible: controller.isAfterMessageLoadMore,
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
+                child: const Padding(
+                  padding: EdgeInsets.all(8.0),
                   child: CircularProgressIndicator.adaptive(),
                 )),
             GetBuilder<ChatRoomMessageController>(
@@ -274,9 +192,9 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
                 builder: (controller) {
                   var isUser = controller.accountId == controller.replyMessage?.sender?.id;
                   return AnimatedContainer(
-                    duration: Duration(milliseconds: 300),
+                    duration: const Duration(milliseconds: 300),
                     height: controller.isOnReplying ? 90 : 0,
-                    decoration: BoxDecoration(
+                    decoration: const BoxDecoration(
                       color: Colors.white,
                       border: Border(
                         top: BorderSide(
@@ -288,24 +206,24 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
                     child: Visibility(
                       visible: controller.isOnReplying,
                       child: SingleChildScrollView(
-                        physics: NeverScrollableScrollPhysics(),
+                        physics: const NeverScrollableScrollPhysics(),
                         child: SizedBox(
                           height: 90,
                           child: Padding(
-                            padding: EdgeInsets.only(left: 15),
+                            padding: const EdgeInsets.only(left: 15),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Row(
                                   children: [
                                     Text(
-                                      'replying_to'.tr + ' ',
-                                      style: TextStyle(fontSize: 13.3),
+                                      '${'replying_to'.tr} ',
+                                      style: const TextStyle(fontSize: 13.3),
                                     ),
                                     Expanded(
                                       child: Text(
                                         isUser ? 'Yourself'.tr : controller.name,
-                                        style: TextStyle(
+                                        style: const TextStyle(
                                           fontWeight: FontWeight.w600,
                                         ),
                                       ),
@@ -315,7 +233,7 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
                                       child: Padding(
                                         padding: const EdgeInsets.all(16.0),
                                         child: Image.asset(
-                                          Assets.app_assetsIconsProfileCloseCircleButton,
+                                          "packages/chatmesdk/assets/icons/profile_close_circle-button.png",
                                           width: 18,
                                           height: 18,
                                         ),
@@ -362,7 +280,7 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
             textAlign: TextAlign.left,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 13.3, color: AppColors.lightGray),
+            style: const TextStyle(fontSize: 13.3, color: AppColors.lightGray),
           ),
         );
       case 'voice':
@@ -372,7 +290,7 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
             textAlign: TextAlign.left,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 13.3, color: AppColors.lightGray),
+            style: const TextStyle(fontSize: 13.3, color: AppColors.lightGray),
           ),
         );
       case 'sticker':
@@ -383,7 +301,7 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
               textAlign: TextAlign.left,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 13.3, color: AppColors.lightGray),
+              style: const TextStyle(fontSize: 13.3, color: AppColors.lightGray),
             )
           ],
         );
@@ -402,13 +320,13 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
                 fit: BoxFit.cover,
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Text(
               'contact'.tr,
               textAlign: TextAlign.left,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 13.3, color: AppColors.lightGray),
+              style: const TextStyle(fontSize: 13.3, color: AppColors.lightGray),
             ),
           ],
         );
@@ -439,7 +357,7 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
                           fit: BoxFit.cover,
                         )),
                   ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Text(
               replyMessage.message!.isNotEmpty
                   ? replyMessage.message!
@@ -449,7 +367,7 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
               textAlign: TextAlign.left,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(fontSize: 13.3, color: AppColors.lightGray),
+              style: const TextStyle(fontSize: 13.3, color: AppColors.lightGray),
             )
           ],
         );
@@ -460,7 +378,7 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
             textAlign: TextAlign.left,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 13.3, color: AppColors.lightGray),
+            style: const TextStyle(fontSize: 13.3, color: AppColors.lightGray),
           ),
         );
       case 'vows':
@@ -470,18 +388,18 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
             textAlign: TextAlign.left,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(fontSize: 13.3, color: AppColors.lightGray),
+            style: const TextStyle(fontSize: 13.3, color: AppColors.lightGray),
           ),
         );
       default:
-        return SizedBox();
+        return const SizedBox();
     }
   }
 
   Widget buildTimeStamp(String timeStamp) {
     return Container(
-      margin: EdgeInsets.only(bottom: 15),
-      padding: EdgeInsets.symmetric(
+      margin: const EdgeInsets.only(bottom: 15),
+      padding: const EdgeInsets.symmetric(
         vertical: 6,
         horizontal: 10,
       ),
@@ -491,7 +409,7 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
       ),
       child: Text(
         timeStamp,
-        style: TextStyle(
+        style: const TextStyle(
           color: Color(0xff787878),
           fontSize: 11.11,
           fontWeight: FontWeight.w400,
@@ -510,7 +428,7 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
         _onSelectPinMessage(reversedList, pinList[pinIndex + 1], pinIndex + 1, true);
       },
       child: Padding(
-        padding: EdgeInsets.only(left: 15),
+        padding: const EdgeInsets.only(left: 15),
         child: Row(
           children: [
             Image.asset(
@@ -523,10 +441,10 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
             Row(
               children: [
                 ConstrainedBox(
-                  constraints: BoxConstraints(maxWidth: 70),
+                  constraints: const BoxConstraints(maxWidth: 70),
                   child: Text(
                     '${controller.selectedPinItem.sender?.name}',
-                    style: TextStyle(
+                    style: const TextStyle(
                       color: AppColors.txtSeconddaryColor,
                       fontSize: 13,
                     ),
@@ -534,7 +452,7 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                Text(
+                const Text(
                   ': ',
                   style: TextStyle(
                     color: AppColors.txtSeconddaryColor,
@@ -548,7 +466,7 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
                 flex: 1,
                 child: Text(
                   MessageHelper.checkPinMessageType(controller.selectedPinItem),
-                  style: TextStyle(
+                  style: const TextStyle(
                     color: Color(0xFF787878),
                     fontSize: 13,
                   ),
@@ -556,16 +474,16 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
-            SizedBox(width: 10),
+            const SizedBox(width: 10),
             InkWell(
               onTap: _onTogglePinMessages,
               child: Padding(
-                padding: EdgeInsets.only(right: 15, top: 5, bottom: 5),
+                padding: const EdgeInsets.only(right: 15, top: 5, bottom: 5),
                 child: Row(
                   children: [
                     Text(
                       '${showCurrentPin.toString()} ${"of".tr} $totalPins',
-                      style: TextStyle(
+                      style: const TextStyle(
                         color: AppColors.primaryColor,
                         fontSize: 13,
                       ),
@@ -600,22 +518,15 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
     if (controller.indexMessageForScroll != -1) {
       await MessageHelper.onScrollToMessageIndex(controller, data.id!, isAnimatedMessage: false);
     } else {
-      BaseDialogLoading.show();
+      // BaseDialogLoading.show();
       controller.rootMessageDate = data.createdAt!.toIso8601String();
       controller.update();
       String? messageId = await controller.getMessagesBetweenDate();
       if (messageId != null) {
         await MessageHelper.onScrollToMessageIndex(controller, messageId, isAnimatedMessage: false);
       }
-      BaseDialogLoading.dismiss();
+      // BaseDialogLoading.dismiss();
     }
-  }
-
-  void _onSelectUnpin(String messageId, List<MessageModel> pinList) {
-    setState(() {
-      openPinMessage = false;
-    });
-    Get.find<ChatRoomMessageController>().onUnpinMessage(messageId);
   }
 
   Future<void> onListenScroll(ListViewObserveModel p0) async {
@@ -654,19 +565,6 @@ class _ChatRoomBodyState extends State<ChatRoomBody> {
       }
     }
   }
-
-  Future<void> onListenPinScroll() async {
-    if (_pinScrollController.position.maxScrollExtent == _pinScrollController.position.pixels) {
-      var controller = Get.find<ChatRoomMessageController>();
-      if (controller.listPinMessage.length == AppConstants.defaultLimit && controller.pinMessageCurrentPage == 1) {
-        controller.isPinMessageLoadMore = true;
-        controller.update();
-      }
-      if (controller.isPinMessageLoadMore) {
-        await controller.getMorePinMessage();
-      }
-    }
-  }
 }
 
 class MessageCard extends StatelessWidget {
@@ -698,8 +596,8 @@ class MessageCard extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 20),
               child: Row(
                 children: [
-                  SizedBox(width: 15),
-                  Flexible(child: WidgetBindingSeperateLine()),
+                  const SizedBox(width: 15),
+                  const Flexible(child: WidgetBindingSeperateLine()),
                   Expanded(
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
@@ -708,12 +606,12 @@ class MessageCard extends StatelessWidget {
                       child: Text(
                         'unread_message'.tr,
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 11.3, color: Colors.black // Color(0xff787878),
+                        style: const TextStyle(fontSize: 11.3, color: Colors.black // Color(0xff787878),
                             ),
                       ),
                     ),
                   ),
-                  Flexible(child: WidgetBindingSeperateLine()),
+                  const Flexible(child: WidgetBindingSeperateLine()),
                 ],
               ),
             ),
@@ -726,9 +624,7 @@ class MessageCard extends StatelessWidget {
   Widget _buildMessage(MessageModel message, ChatRoomMessageController controller, index, lastIndex) {
     var isAnimatedPin = controller.messageIdForAnimationPin == message.id;
     var isAnimatedMessage = controller.messageIdForAnimationMessage == message.id;
-    if (message.type == 'activity') {
-      return GroupActivityMessage(mesage: message);
-    }
+
     //* not add friend yet
     if (index == lastIndex && message.status == 'reject' && message.rejectCode == 'notfriend') {
       return AnimatedEaseoutMessage(
@@ -744,24 +640,21 @@ class MessageCard extends StatelessWidget {
               isGroup: false,
             ),
             Text(
-              '${controller.name} ' + 'hasn’t_added_you_to_contact_yet'.tr,
-              style: TextStyle(
+              '${controller.name} ${'hasn’t_added_you_to_contact_yet'.tr}',
+              style: const TextStyle(
                 fontSize: 13.3,
                 color: Color(0xff787878),
               ),
             ),
-            SizedBox(height: 6),
-            InkWell(
-              onTap: _viewShareContact,
-              child: Text(
-                'send_a_friend_request_now'.tr,
-                style: TextStyle(
-                  fontSize: 13.3,
-                  color: Color(0xff4882B8),
-                ),
+            const SizedBox(height: 6),
+            Text(
+              'send_a_friend_request_now'.tr,
+              style: const TextStyle(
+                fontSize: 13.3,
+                color: Color(0xff4882B8),
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
           ],
         ),
       );
@@ -782,12 +675,12 @@ class MessageCard extends StatelessWidget {
             ),
             Text(
               'the_message_is_rejected_by_the_receiver'.tr,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13.3,
                 color: Color(0xff787878),
               ),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
           ],
         ),
       );
@@ -811,7 +704,7 @@ class MessageCard extends StatelessWidget {
           //* show message with status
           if (index == lastIndex)
             Transform.translate(
-              offset: Offset(0, -10),
+              offset: const Offset(0, -10),
               child: Padding(
                 padding: const EdgeInsets.only(
                   bottom: 12,
@@ -830,14 +723,14 @@ class MessageCard extends StatelessWidget {
 
   Widget _checkSeenSentStatus(MessageModel message, String accountId) {
     if (message.isUploading ?? false) {
-      return SizedBox.shrink();
+      return const SizedBox.shrink();
     }
     if (message.sender!.id == accountId) {
       if (message.status == 'sent' && message.isSeen == true) {
         return Text(
           'seen'.tr,
           textAlign: TextAlign.right,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 11.11,
             color: Color(0xff787878),
           ),
@@ -846,17 +739,12 @@ class MessageCard extends StatelessWidget {
       return Text(
         'sent'.tr,
         textAlign: TextAlign.right,
-        style: TextStyle(
+        style: const TextStyle(
           fontSize: 11.11,
           color: Color(0xff787878),
         ),
       );
     }
-    return SizedBox();
-  }
-
-  void _viewShareContact() {
-    var _controller = Get.find<ChatRoomMessageController>();
-    _controller.navigateToViewContactFromAppBarTap(_controller.profileId);
+    return const SizedBox();
   }
 }

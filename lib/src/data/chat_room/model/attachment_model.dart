@@ -38,7 +38,6 @@ class AttachmentModel {
     return AttachmentModel(
         user: data['user'] as String?,
         url: Uri.encodeFull(data['url'] ?? ''),
-        hasQrcode: data['hasQrcode'] as bool?,
         originalName: data['originalName'] as String?,
         fileType: data['fileType'] as String?,
         fileSize: data['fileSize'] as String?,

@@ -1,23 +1,21 @@
-import 'package:chatme/data/auth_data/storage_token.dart';
-import 'package:chatme/data/chat_room/chat_room_controller.dart';
-import 'package:chatme/data/chat_room/chat_room_message_controller.dart';
-import 'package:chatme/data/chat_room/model/chat_model/chat_room_model.dart';
-import 'package:chatme/data/group_room/group_message_controller.dart';
-import 'package:chatme/data/profile/controller/account_user_profile_controller.dart';
-import 'package:chatme/routes/app_routes.dart';
-import 'package:chatme/util/constant/app_asset.dart';
-import 'package:chatme/util/constant/call_enum.dart';
-import 'package:chatme/util/helper/chat_helper.dart';
-import 'package:chatme/util/helper/date_time.dart';
-import 'package:chatme/util/helper/message_helper.dart';
-import 'package:chatme/util/text_style.dart';
-import 'package:chatme/widgets/call/join_existing_call_button.dart';
-import 'package:chatme/widgets/cupertino/cupertino_dialog.dart';
-import 'package:chatme/widgets/unread_count_widget.dart';
+// ignore_for_file: prefer_function_declarations_over_variables
+
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:flutter_widget_from_html/flutter_widget_from_html.dart';
 import 'package:get/get.dart';
+
+import '../../../data/api_helper/storage_token.dart';
+import '../../../data/chat_room/chat_room.dart';
+import '../../../data/chat_room/model/chat_model/chat_room_model.dart';
+import '../../../util/constant/call_enum.dart';
+import '../../../util/helper/chat_helper.dart';
+import '../../../util/helper/date_time.dart';
+import '../../../util/helper/message_helper.dart';
+import '../../../util/text_style.dart';
+import '../../../util/theme/app_color.dart';
+import '../../widget/unread_counter.dart';
+import '../chat_room/chat_room_screen.dart';
 
 final convertLinebreak = (String text) {
   return text.replaceAll('\n', ' ');
@@ -48,19 +46,18 @@ var generateMessage = (ChatRoomModel _model, bool isFromGroup) {
   String content = '';
   final senderId = _model.lastMessage?.sender?.id ?? '';
   final senderName = _model.lastMessage?.sender?.name ?? '';
-  final textStyle = AppTextStyle.smallTextMessage;
-  Get.lazyPut(() => AccountUserProfileController());
-  final userId = Get.find<AccountUserProfileController>().profile?.id ?? '';
-  bool _isMyMessage = false;
+  const textStyle = AppTextStyle.smallTextMessage;
+  String userId = '';
+  bool isMyMessage = false;
 
   if (senderId == userId) {
-    _isMyMessage = true;
+    isMyMessage = true;
   }
   // check if render in group or personal
   if (isFromGroup) {
     //check who is sender
     // ignore: unrelated_type_equality_checks
-    if (_isMyMessage) {
+    if (isMyMessage) {
       preText = 'you:'.tr;
     } else if (senderName.isNotEmpty) {
       preText = '$senderName: ';
@@ -69,7 +66,7 @@ var generateMessage = (ChatRoomModel _model, bool isFromGroup) {
     }
   } else {
     // ignore: unrelated_type_equality_checks
-    if (_isMyMessage) {
+    if (isMyMessage) {
       preText = '${'you'.tr} ';
     } else if (senderName.isNotEmpty) {
       preText = '';
@@ -94,30 +91,30 @@ var generateMessage = (ChatRoomModel _model, bool isFromGroup) {
     );
     //check unsent message
   } else if (_model.lastMessage?.status == 'unsent') {
-    var _content;
-    if (!_isMyMessage && !isFromGroup) {
-      _content = 'unsent_a_message'.tr;
-      _content = '$_content'.capitalizeFirst ?? '';
+    String content;
+    if (!isMyMessage && !isFromGroup) {
+      content = 'unsent_a_message'.tr;
+      content = '$content'.capitalizeFirst ?? '';
     } else if (isFromGroup) {
-      _content = 'unsent_a_message'.tr;
-      _content = '$_content'.capitalizeFirst ?? '';
-      _content = ('$preText$_content');
+      content = 'unsent_a_message'.tr;
+      content = '$content'.capitalizeFirst ?? '';
+      content = ('$preText$content');
     } else {
-      _content = 'you_unsent_a_message'.tr;
+      content = 'you_unsent_a_message'.tr;
     }
     return Text(
-      _content,
+      content,
       style: textStyle,
       maxLines: 1,
     );
     //check forward message
   } else if (_model.lastMessage?.refType == 'forward') {
-    var _content = 'forward_a_message'.tr;
-    if (!_isMyMessage && !isFromGroup) {
-      _content = '$content'.capitalizeFirst ?? '';
+    var content = 'forward_a_message'.tr;
+    if (!isMyMessage && !isFromGroup) {
+      content = content.capitalizeFirst ?? '';
     }
     return Text(
-      ('$preText$_content'),
+      ('$preText$content'),
       style: textStyle,
       maxLines: 1,
     );
@@ -133,24 +130,20 @@ var generateMessage = (ChatRoomModel _model, bool isFromGroup) {
             _model.lastMessage!.mentions,
             true,
             onClickMention: (id) async {
-              if (_model.type == 'g') {
-                await navigateToGroupChatMessage(_model, true);
-              } else {
-                await navigateToChatMessage(_model, true);
-              }
+              await navigateToChatMessage(_model, true);
             },
             mentionStyle: textStyle,
             maxLinesText: 1,
           );
         } else {
-          var _content;
+          String textContent;
           if (isFromGroup) {
-            _content = '$preText${convertLinebreak(content)}';
+            textContent = '$preText${convertLinebreak(content)}';
           } else {
-            _content = convertLinebreak(content);
+            textContent = convertLinebreak(content);
           }
           return Text(
-            _content,
+            textContent,
             style: textStyle,
             maxLines: 1,
           );
@@ -163,7 +156,7 @@ var generateMessage = (ChatRoomModel _model, bool isFromGroup) {
         if (isFromGroup) {
           content = ('$preText$content');
         } else {
-          content = ('$content');
+          content = (content);
         }
         return Text(
           content,
@@ -179,10 +172,10 @@ var generateMessage = (ChatRoomModel _model, bool isFromGroup) {
         );
       case 'voice':
         content = 'sent_a_voice_message'.tr;
-        if (!_isMyMessage && !isFromGroup) {
-          content = '$content'.capitalizeFirst ?? '';
+        if (!isMyMessage && !isFromGroup) {
+          content = content.capitalizeFirst ?? '';
         } else if (isFromGroup) {
-          content = '$content'.capitalizeFirst ?? '';
+          content = content.capitalizeFirst ?? '';
         }
         return Text(
           ('$preText$content'),
@@ -201,8 +194,8 @@ var generateMessage = (ChatRoomModel _model, bool isFromGroup) {
         if (type.isAudioFileName) content = 'sent_an_audio'.tr;
         if (mediaLength > 1) content = 'sent_multiple_media'.tr;
 
-        if (!_isMyMessage && !isFromGroup) {
-          content = '$content'.capitalizeFirst ?? '';
+        if (!isMyMessage && !isFromGroup) {
+          content = content.capitalizeFirst ?? '';
         }
         return Text(
           ('$preText$content'),
@@ -211,35 +204,22 @@ var generateMessage = (ChatRoomModel _model, bool isFromGroup) {
         );
       case 'file':
         if (_model.lastMessage?.attachments!.isNotEmpty ?? false) {
-          int _fileLength = _model.lastMessage?.attachments?.length ?? 0;
-          if (_fileLength > 1) {
+          int fileLength = _model.lastMessage?.attachments?.length ?? 0;
+          if (fileLength > 1) {
             content = 'sent_files'.tr;
           } else {
             content = 'sent_a_file'.tr;
           }
         }
-        if (!_isMyMessage && !isFromGroup) {
-          content = '$content'.capitalizeFirst ?? '';
+        if (!isMyMessage && !isFromGroup) {
+          content = content.capitalizeFirst ?? '';
         }
         return Text(
           ('$preText$content'),
           style: textStyle,
           maxLines: 1,
         );
-      case 'activity':
-        if (_model.lastMessage?.args != null) {
-          var _text = MessageHelper.findActivityMessage(
-            _model.lastMessage?.message ?? '',
-            _model.lastMessage!.args,
-          );
-          content = _text;
-        }
-        return Text(
-          ('$content'),
-          style: textStyle,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        );
+
       case 'link':
         return Text(
           _model.lastMessage?.message ?? 'link'.tr,
@@ -251,11 +231,11 @@ var generateMessage = (ChatRoomModel _model, bool isFromGroup) {
         String text = '';
         bool isMissedCall = _model.lastMessage?.call?.isMissedCall ?? false;
         if (isMissedCall) {
-          text = _isMyMessage
-              ? '${_model.name} ' + 'missed_your_call'.tr
-              : 'You'.tr + ' ' + 'missed_audio_call'.tr.toLowerCase();
+          text = isMyMessage
+              ? '${_model.name} ${'missed_your_call'.tr}'
+              : '${'You'.tr} ${'missed_audio_call'.tr.toLowerCase()}';
         } else {
-          text = _isMyMessage ? 'you_called'.tr + ' ' + _model.name : '${_model.name} ' + 'called_you'.tr;
+          text = isMyMessage ? '${'you_called'.tr} ${_model.name}' : '${_model.name} ${'called_you'.tr}';
         }
         return Text(
           text,
@@ -274,26 +254,18 @@ var generateMessage = (ChatRoomModel _model, bool isFromGroup) {
 };
 
 final generateLowerTrailing = (ChatRoomModel model) {
-  var userId = Get.put(AccountUserProfileController()).profile?.id ?? '';
+  var userId = '';
   var unreadCount = model.unreadCount;
   var messageStatus = model.lastMessage?.status ?? '';
   var senderId = model.lastMessage?.sender?.id ?? '';
-  var _radius = 10.0;
-  bool _isHasMention = model.hasMention;
+  var radius = 10.0;
+  bool isHasMention = model.hasMention;
   var hasDraft =
       (model.draft?.message?.isNotEmpty ?? false) || model.draft?.message != null || (model.draft?.showDraft ?? false);
   // * self message
   if (senderId == userId) {
-    if (model.type == 'g' && model.isCalling) {
-      bool isJoinCall = Get.find<ChatRoomController>().audioCallEventState == CallEventEnum.joinCall;
-      if (isJoinCall) return SizedBox();
-      return JoinExistCallButton(
-        fontSize: 10,
-        padding: 4,
-        onJoinCall: () {},
-      );
-    } else if (messageStatus == 'reject') {
-      return Icon(
+    if (messageStatus == 'reject') {
+      return const Icon(
         Icons.error,
         color: Color(0xffCD2525),
       );
@@ -301,8 +273,8 @@ final generateLowerTrailing = (ChatRoomModel model) {
       return Text('seen'.tr);
     } else if (model.unReadCountBiggerThan0 || model.isMarkUnread) {
       return CircleAvatar(
-        radius: _radius,
-        backgroundColor: Color(0xffCD2525),
+        radius: radius,
+        backgroundColor: const Color(0xffCD2525),
       );
     } else if (messageStatus == 'unsent') {
       return Text('sent'.tr);
@@ -315,34 +287,12 @@ final generateLowerTrailing = (ChatRoomModel model) {
 
   // * message from other
   else {
-    if (model.type == 'g' && model.isCalling) {
-      bool isJoinCall = Get.find<ChatRoomController>().audioCallEventState == CallEventEnum.joinCall;
-      if (model.unreadCount > 0) {
-        return Row(children: [
-          if (!isJoinCall) ...[
-            JoinExistCallButton(
-              fontSize: 10,
-              padding: 4,
-              onJoinCall: () {},
-            )
-          ],
-          SizedBox(width: 2),
-          UnReadCountWidget(amount: unreadCount, isMute: model.isMuted)
-        ]);
-      }
-      if (isJoinCall) return SizedBox();
-      return JoinExistCallButton(
-        fontSize: 10,
-        padding: 4,
-        onJoinCall: () {},
-      );
-    }
     if (model.isMarkUnread) {
       return CircleAvatar(
-        radius: _radius,
-        backgroundColor: Color(0xffCD2525),
+        radius: radius,
+        backgroundColor: const Color(0xffCD2525),
       );
-    } else if (_isHasMention) {
+    } else if (isHasMention) {
       return Row(
         children: [
           Flexible(
@@ -354,7 +304,7 @@ final generateLowerTrailing = (ChatRoomModel model) {
                 color: AppColors.primaryColor,
                 shape: BoxShape.circle,
               ),
-              child: Text(
+              child: const Text(
                 '@',
                 style: TextStyle(
                   color: Colors.white,
@@ -382,8 +332,8 @@ final generateLowerTrailing = (ChatRoomModel model) {
     // }
 
     else {
-      if (model.isOfficial ?? false) return Text('');
-      return Text('');
+      if (model.isOfficial ?? false) return const Text('');
+      return const Text('');
     }
   }
 };
@@ -396,37 +346,26 @@ final navigateToChatMessage = (
   var chatArugment = [chatModel.id, ''];
   controller.trckRoomIn = chatModel.id ?? '';
   controller.removeUnreadCount(chatModel.id, personalList);
-  await Get.toNamed(
-    Routes.chat_room_message,
-    arguments: chatArugment,
-  )?.then((_) async {
-    controller.trckRoomIn = '';
-    await ChatHelper.onTrackRoomOFF();
-    await Get.find<ChatRoomMessageController>().saveDraftMessage();
-  });
-};
-
-final navigateToGroupChatMessage = (ChatRoomModel chatModel, bool personalList) async {
-  var _controller = Get.find<ChatRoomController>();
-  _controller.removeUnreadCount(chatModel.id, personalList);
-  var chatArugment = [chatModel.id, ''];
-  _controller.trckRoomIn = chatModel.id ?? '';
-  await Get.toNamed(Routes.group_chat_room_message, arguments: chatArugment)?.then((value) async {
-    await Get.find<GroupMessageController>().saveDraftMessage();
-    await ChatHelper.onTrackRoomOFF();
-  });
+  // await Get.to(
+  //   const ChatRoomMessageScreen(),
+  //   arguments: chatArugment,
+  // )?.then((_) async {
+  //   controller.trckRoomIn = '';
+  //   await ChatHelper.onTrackRoomOFF();
+  //   await Get.find<ChatRoomMessageController>().saveDraftMessage();
+  // });
 };
 
 final slidableRoomItems = (int index, ChatRoomController controller, BuildContext context,
     GlobalKey<AnimatedListState> key, Animation<double> animation, ChatRoomModel modelMessage, ChatType chatType,
     {required Widget child}) {
-  var _model = modelMessage;
+  var model = modelMessage;
   var ratio = 0.65;
-  var confirmSize = _model.confirmSize = Get.width * ratio;
-  var groupDisband = _model.lastMessage?.message == 'activity.group.disband';
-  var buttonSize = _model.buttonSize = groupDisband ? Get.width * ratio / 2 : Get.width * ratio / 3;
+  var confirmSize = model.confirmSize = Get.width * ratio;
+  var groupDisband = model.lastMessage?.message == 'activity.group.disband';
+  var buttonSize = model.buttonSize = groupDisband ? Get.width * ratio / 2 : Get.width * ratio / 3;
 
-  _model.unReadCountBiggerThan0 = _model.unreadCount > 0;
+  model.unReadCountBiggerThan0 = model.unreadCount > 0;
   return StatefulBuilder(builder: ((context, setState) {
     return Slidable(
       key: ValueKey(index),
@@ -439,7 +378,7 @@ final slidableRoomItems = (int index, ChatRoomController controller, BuildContex
             autoClose: true,
             padding: EdgeInsets.zero,
             onPressed: (BuildContext context) {
-              onPressMarkButton(_model, index, controller);
+              onPressMarkButton(model, index, controller);
             },
             child: Row(
               children: [
@@ -448,15 +387,15 @@ final slidableRoomItems = (int index, ChatRoomController controller, BuildContex
                   duration: const Duration(seconds: 1),
                   child: Container(
                     alignment: Alignment.center,
-                    padding: EdgeInsets.symmetric(horizontal: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
                     height: double.maxFinite,
-                    width: _model.showConfirm || groupDisband ? 0 : buttonSize,
+                    width: model.showConfirm || groupDisband ? 0 : buttonSize,
                     color: Colors.grey,
                     child: GetBuilder<ChatRoomController>(
                         id: 'markBuilder',
                         builder: (_) {
                           return Text(
-                            _model.unReadCountBiggerThan0 || _model.isMarkUnread
+                            model.unReadCountBiggerThan0 || model.isMarkUnread
                                 ? 'mark_as_read'.tr
                                 : 'mark_as_unread'.tr,
                             textAlign: TextAlign.center,
@@ -471,7 +410,7 @@ final slidableRoomItems = (int index, ChatRoomController controller, BuildContex
                     onTap: () async {
                       setState(() {
                         clickHideButton(
-                          _model,
+                          model,
                           index,
                           controller,
                           context,
@@ -486,10 +425,10 @@ final slidableRoomItems = (int index, ChatRoomController controller, BuildContex
                       child: Container(
                         alignment: Alignment.center,
                         height: double.maxFinite,
-                        width: _model.showConfirm ? confirmSize : buttonSize,
-                        color: _model.redColor ? Colors.red : Colors.green,
+                        width: model.showConfirm ? confirmSize : buttonSize,
+                        color: model.redColor ? Colors.red : Colors.green,
                         child: Text(
-                          _model.showConfirm ? 'confirm'.tr : 'hide'.tr,
+                          model.showConfirm ? 'confirm'.tr : 'hide'.tr,
                           style: AppTextStyle.smallTextMediumWhite,
                         ),
                       ),
@@ -501,7 +440,7 @@ final slidableRoomItems = (int index, ChatRoomController controller, BuildContex
                   child: InkWell(
                     onTap: () async {
                       setState(() {
-                        clickDeleteButton(_model);
+                        clickDeleteButton(model);
                       });
                     },
                     child: AnimatedSize(
@@ -510,7 +449,7 @@ final slidableRoomItems = (int index, ChatRoomController controller, BuildContex
                       child: Container(
                         alignment: Alignment.center,
                         height: double.maxFinite,
-                        width: _model.showConfirm ? 0 : buttonSize,
+                        width: model.showConfirm ? 0 : buttonSize,
                         color: Colors.red,
                         child: Text(
                           'delete'.tr,
@@ -534,11 +473,11 @@ final slidableRoomItems = (int index, ChatRoomController controller, BuildContex
   }));
 };
 
-Future<void> clickDeleteButton(ChatRoomModel _model) async {
+Future<void> clickDeleteButton(ChatRoomModel model) async {
   final userAlreadyReadDelete = StorageToken.readWarningDelete();
   if (userAlreadyReadDelete) {
-    _model.showConfirm = true;
-    _model.redColor = true;
+    model.showConfirm = true;
+    model.redColor = true;
   } else {
     warningDialog;
     await StorageToken.saveWarningDelete(true);
@@ -580,9 +519,9 @@ final removeItem = (int index, ChatRoomController controller, GlobalKey<Animated
     (_, animation) {
       return SizeTransition(
         sizeFactor: animation,
-        child: Card(
+        child: const Card(
           elevation: 0,
-          margin: const EdgeInsets.all(10),
+          margin: EdgeInsets.all(10),
         ),
       );
     },
@@ -622,12 +561,12 @@ final onPressMarkButton = (ChatRoomModel model, int index, ChatRoomController co
 };
 
 final warningDialog = (BuildContext context) {
-  cupertinoDialog(context,
-      height: 130,
-      content: 'the_chat_will_reappear_as_soon_as_there’s_a_new_message.'.tr,
-      buttonText: 'ok'.tr, onTap: () async {
-    navigator!.pop(context);
-  });
+  // cupertinoDialog(context,
+  //     height: 130,
+  //     content: 'the_chat_will_reappear_as_soon_as_there’s_a_new_message.'.tr,
+  //     buttonText: 'ok'.tr, onTap: () async {
+  //   navigator!.pop(context);
+  // });
 };
 
 Widget listenSubtypeActionWidget(String text, [ChatRoomModel? model]) {
@@ -637,13 +576,13 @@ Widget listenSubtypeActionWidget(String text, [ChatRoomModel? model]) {
       id: model?.id ?? 'official',
       builder: (context) {
         return DefaultTextStyle(
-          style: TextStyle(
+          style: const TextStyle(
             color: Colors.green,
             fontWeight: FontWeight.w400,
             fontSize: 13.33,
           ),
           child: Expanded(
-            child: isGroup ? Text('$listOfPersonTyping ' + 'is_typing'.tr) : Text(text),
+            child: isGroup ? Text('$listOfPersonTyping ${'is_typing'.tr}') : Text(text),
           ),
         );
       });

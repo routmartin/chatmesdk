@@ -6,8 +6,6 @@ import 'dart:convert';
 
 ListenRoomModel listenRoomModelFromJson(String str) => ListenRoomModel.fromJson(json.decode(str));
 
-String listenRoomModelToJson(ListenRoomModel data) => json.encode(data.toJson());
-
 class ListenRoomModel {
   String? id;
   String? type;
@@ -68,40 +66,10 @@ class ListenRoomModel {
         lastOnlineAt: json['lastOnlineAt'] == null ? null : DateTime.parse(json['lastOnlineAt']),
         isOnline: json['isOnline'],
         isActivated: json['isActivated'],
-        draft: json['draft'] == null ? null : Draft.fromJson(json['draft']),
+        draft: json['draft'] == null ? null : Draft.fromMap(json['draft']),
         profileUrl: json['profileUrl'],
         numberOfOnlineUsers: json['numberOfOnlineUsers'],
       );
-
-  Map<String, dynamic> toJson() => {
-        '_id': id,
-        'type': type,
-        'isOfficial': isOfficial,
-        'name': name,
-        'description': description,
-        'privacy': privacy?.toJson(),
-        'groupId': groupId,
-        'isMuted': isMuted,
-        'profileId': profileId,
-        'unreadCount': unreadCount,
-        'isMarkUnread': isMarkUnread,
-        'recipient': recipient,
-        'avatar': avatar,
-        'lastOnlineAt': lastOnlineAt?.toIso8601String(),
-        'isOnline': isOnline,
-        'isActivated': isActivated,
-        'draft': draft?.toJson(),
-        'profileUrl': profileUrl,
-        'numberOfOnlineUsers': numberOfOnlineUsers,
-      };
-}
-
-class Draft {
-  Draft();
-
-  factory Draft.fromJson(Map<String, dynamic> json) => Draft();
-
-  Map<String, dynamic> toJson() => {};
 }
 
 class PrivacyRoom {
@@ -122,4 +90,19 @@ class PrivacyRoom {
         'isRequiredApproval': isRequiredApproval,
         'isNameStricted': isNameStricted,
       };
+}
+
+class Draft {
+  String? message;
+  bool showDraft = true;
+  String? createdAt;
+
+  Draft({this.message, this.showDraft = true, this.createdAt});
+
+  factory Draft.fromMap(Map<String, dynamic> map) {
+    return Draft(
+      message: map['message'] != null ? map['message'] as String : null,
+      createdAt: map['createdAt'] != null ? map['createdAt'] as String : null,
+    );
+  }
 }

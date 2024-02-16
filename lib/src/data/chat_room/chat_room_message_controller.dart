@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:math' as math;
 
+import 'package:chatmesdk/src/util/helper/message_voice_helper.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
@@ -21,7 +22,7 @@ import 'chat_room_controller.dart';
 import 'model/listen_room_model.dart';
 import 'model/message_response_model.dart';
 
-class ChatRoomMessageController extends GetxController with WidgetsBindingObserver {
+class ChatRoomMessageController extends GetxController with WidgetsBindingObserver, MessageVoiceHelper {
   // animatino
   late Socket _messageSokcet;
   late Socket _roomSocket;
@@ -32,11 +33,10 @@ class ChatRoomMessageController extends GetxController with WidgetsBindingObserv
   String name = '';
   String testName = 'N/A';
   String lastOnlineAt = '';
-  String accountId = '';
+  String accountId = '65cdbb0eb0cb798a81c0777f';
   String profileId = '';
   int unReadMessageCount = 0;
   bool isOfficial = false;
-  bool isLoading = true;
 
   bool isMultiSelection = false;
   bool isPartycipateTyping = false;
@@ -78,7 +78,7 @@ class ChatRoomMessageController extends GetxController with WidgetsBindingObserv
 
   TextEditingController msgTextController = TextEditingController();
   TextEditingController mediaTextController = TextEditingController();
-  var chatRoomController = Get.find<ChatRoomController>();
+  // var chatRoomController = Get.put(ChatRoomController());
 
   bool isUploading = false;
   bool isMessageSenting = false;
@@ -105,8 +105,9 @@ class ChatRoomMessageController extends GetxController with WidgetsBindingObserv
     _messageSokcet = await BaseSocket.initConnectWithHeader(SocketPath.message);
     _roomSocket = await BaseSocket.initConnectWithHeader(SocketPath.room);
     WidgetsBinding.instance.addObserver(this);
-    _mapChatArgument(Get.arguments);
-    await _getChatRoomDetail();
+    // print(roomId);
+    // _mapChatArgument(Get.arguments);
+    // await _getChatRoomDetail();
     await _checkGetMessage();
     _initAllEventListener();
     observerController.controller?.addListener(_scrollListener);
@@ -384,9 +385,9 @@ class ChatRoomMessageController extends GetxController with WidgetsBindingObserv
   void onMulitDelete() {
     var deleteArray = [];
     var filterSelectList = listMessage.where((message) => message.isSelect == true);
-    filterSelectList.forEach((deleteMessage) {
+    for (var deleteMessage in filterSelectList) {
       deleteArray.add(deleteMessage.id);
-    });
+    }
 
     onDeleteMessage(deleteArray);
     isMultiSelection = false;
@@ -434,7 +435,7 @@ class ChatRoomMessageController extends GetxController with WidgetsBindingObserv
           request,
           ack: (result) async {
             var chatRoomController = Get.find<ChatRoomController>();
-            Draft? draft = result?['data']?['draft'] == null ? null : Draft.fromJson(result?['data']?['draft']);
+            Draft? draft = result?['data']?['draft'] == null ? null : Draft.fromMap(result?['data']?['draft']);
             int indexList = chatRoomController.chatRoomList.indexWhere((element) => element.id == tmpRoomId);
             int indexGroupList = chatRoomController.groupRoomList.indexWhere((element) => element.id == tmpRoomId);
             if (indexList != -1) {
@@ -448,9 +449,9 @@ class ChatRoomMessageController extends GetxController with WidgetsBindingObserv
           },
         );
       } else {
-        if (isHaveDraft) {
-          await deleteDraftMessage();
-        }
+        // if (isHaveDraft) {
+        //   await deleteDraftMessage();
+        // }
         completer.complete(false);
       }
     } catch (e) {
@@ -462,35 +463,35 @@ class ChatRoomMessageController extends GetxController with WidgetsBindingObserv
     return completer.future;
   }
 
-  Future deleteDraftMessage() async {
-    var tmpRoomId = roomId;
-    try {
-      var request = {
-        'body': {'roomId': roomId}
-      };
-      _roomSocket.emitWithAck(
-        SocketPath.deleteDraft,
-        request,
-        ack: (result) async {
-          log(result.toString());
+  // Future deleteDraftMessage() async {
+  //   var tmpRoomId = roomId;
+  //   try {
+  //     var request = {
+  //       'body': {'roomId': roomId}
+  //     };
+  //     _roomSocket.emitWithAck(
+  //       SocketPath.deleteDraft,
+  //       request,
+  //       ack: (result) async {
+  //         log(result.toString());
 
-          int indexList = chatRoomController.chatRoomList.indexWhere((element) => element.id == tmpRoomId);
-          int indexGroupList = chatRoomController.groupRoomList.indexWhere((element) => element.id == tmpRoomId);
-          if (indexList != -1) {
-            chatRoomController.chatRoomList[indexList].draft = null;
-          }
-          if (indexGroupList != -1) {
-            chatRoomController.groupRoomList[indexGroupList].draft = null;
-          }
-          chatRoomController.update(['totalCount', 'list', 'groupList']);
-        },
-      );
-    } catch (e) {
-      final message = e.toString();
-      await CrashReport.send(ReportModel(message: message));
-      log(e.toString());
-    }
-  }
+  //         int indexList = chatRoomController.chatRoomList.indexWhere((element) => element.id == tmpRoomId);
+  //         int indexGroupList = chatRoomController.groupRoomList.indexWhere((element) => element.id == tmpRoomId);
+  //         if (indexList != -1) {
+  //           chatRoomController.chatRoomList[indexList].draft = null;
+  //         }
+  //         if (indexGroupList != -1) {
+  //           chatRoomController.groupRoomList[indexGroupList].draft = null;
+  //         }
+  //         chatRoomController.update(['totalCount', 'list', 'groupList']);
+  //       },
+  //     );
+  //   } catch (e) {
+  //     final message = e.toString();
+  //     await CrashReport.send(ReportModel(message: message));
+  //     log(e.toString());
+  //   }
+  // }
 
   void _emitSeenMessage() async {
     try {
@@ -774,7 +775,7 @@ class ChatRoomMessageController extends GetxController with WidgetsBindingObserv
           if ((data['uploading'] as List?)?.isNotEmpty ?? false) {
             isPartycipateSending = true;
           }
-          isAllowIncomingCall = data['isAllowIncomingCall'];
+          // isAllowIncomingCall = data['isAllowIncomingCall'];
           isMute = data['isMuted'];
           isOnline = data['isOnline'];
           lastOnlineAt = data['lastOnlineAt'] ?? DateTime.now().toString();
@@ -821,7 +822,7 @@ class ChatRoomMessageController extends GetxController with WidgetsBindingObserv
 
   Future<bool> _submitMessageToSever(messageBodyRequest) async {
     final completer = Completer<bool>();
-    if (isMessageSenting) return false;
+    // if (isMessageSenting) return false;
     try {
       isMessageSenting = true;
       _messageSokcet.emitWithAck(
@@ -829,6 +830,7 @@ class ChatRoomMessageController extends GetxController with WidgetsBindingObserv
         messageBodyRequest,
         ack: (res) async {
           var result = res as Map;
+          print(result);
           if (result.containsKey('data')) {
             MessageHelper.playMessageSentSound();
             isOnReplying = false;
@@ -861,7 +863,8 @@ class ChatRoomMessageController extends GetxController with WidgetsBindingObserv
   void _listenReceiveMessage() async {
     _messageSokcet.on(SocketPath.receiveMessage, (data) {
       var responseMap = data as Map;
-      var receiveRoomId = data['data']['room']['_id'];
+      print(responseMap);
+      var receiveRoomId = data['data']['room'];
       if (receiveRoomId == roomId) {
         var messageMap = responseMap['data']['message'];
         var message0 = MessageModel.fromJson(messageMap);

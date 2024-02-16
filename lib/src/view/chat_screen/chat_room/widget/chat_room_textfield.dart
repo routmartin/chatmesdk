@@ -1,27 +1,22 @@
 import 'dart:async';
-import 'dart:developer';
 import 'dart:math';
-
-import 'package:chatme/data/chat_room/chat_room_message_controller.dart';
-import 'package:chatme/data/image_controller/image_controller.dart';
-import 'package:chatme/data/sticker_controlller/sticker_controller.dart';
-import 'package:chatme/template/chat_screen/chat_room/chat_select_media_screen.dart';
-import 'package:chatme/template/chat_screen/chat_room/widget/chatroom_footer_section.dart';
-import 'package:chatme/template/chat_screen/sticker_screen/sticker_chat_textfield_footer_screen.dart';
-import 'package:chatme/util/constant/app_asset.dart';
-import 'package:chatme/util/constant/app_constant.dart';
-import 'package:chatme/util/helper/message_helper.dart';
-import 'package:chatme/util/helper/message_upload_helper.dart';
-import 'package:chatme/util/helper/message_voice_helper.dart';
-import 'package:chatme/widgets/chat/voice_long_press_wrapper.dart';
 import 'package:custom_timer/custom_timer.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:get/get.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:vibration/vibration.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
+import '../../../../data/chat_room/chat_room.dart';
+import '../../../../data/image_controller.dart';
+import '../../../../util/constant/app_assets.dart';
+import '../../../../util/constant/app_constant.dart';
+import '../../../../util/helper/message_helper.dart';
+import '../../../../util/helper/message_upload_helper.dart';
+import '../../../../util/helper/message_voice_helper.dart';
+import '../../../widget/long_press_wrapper.dart';
+import '../../sticker_screen/export.dart';
+import '../chat_select_media_screen.dart';
+import 'chatroom_footer_section.dart';
 
 class ChatRoomTextField extends StatefulWidget {
   const ChatRoomTextField({Key? key}) : super(key: key);
@@ -57,15 +52,15 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
     _focus.addListener(_onFocusChange);
     _timerController = CustomTimerController(
       vsync: this,
-      begin: Duration(minutes: 0),
-      end: Duration(minutes: 2),
+      begin: const Duration(minutes: 0),
+      end: const Duration(minutes: 2),
       initialState: CustomTimerState.reset,
       interval: CustomTimerInterval.seconds,
     );
 
     _animateController = AnimationController(
       vsync: this,
-      duration: Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 150),
     );
     _animation = Tween<double>(
       begin: 0,
@@ -116,17 +111,17 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
       isLongPress: isLongPress,
       isReleaseHold: isReleaseHold,
       child: Container(
-        color: AppColors.textFiledBackgroundColor,
+        color: const Color(0xffFBFBFB),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              padding: EdgeInsets.only(top: 10),
-              constraints: BoxConstraints(
+              padding: const EdgeInsets.only(top: 10),
+              constraints: const BoxConstraints(
                 minHeight: kBottomNavigationBarHeight - 12,
                 maxHeight: 120,
               ),
-              color: AppColors.txtSeconddaryColor,
+              color: const Color(0xffFBFBFB),
               child: GetBuilder<ChatRoomMessageController>(builder: (_) {
                 return SafeArea(
                   top: false,
@@ -135,168 +130,160 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
                     duration: kTabScrollDuration,
                     child: Row(
                       children: [
-                        AnimatedCrossFade(
-                          layoutBuilder: (topChild, topChildKey, bottomChild, bottomChildKey) {
-                            return Stack(
-                              clipBehavior: Clip.none,
-                              alignment: Alignment.center,
-                              children: <Widget>[
-                                Positioned(
-                                  key: bottomChildKey,
-                                  top: 0,
-                                  child: bottomChild,
-                                ),
-                                Positioned(
-                                  key: topChildKey,
-                                  child: topChild,
-                                ),
-                              ],
-                            );
-                          },
-                          duration: kThemeChangeDuration,
-                          crossFadeState: _messageController.isShowActionIcons
-                              ? CrossFadeState.showFirst
-                              : CrossFadeState.showSecond,
-                          firstChild: isRecording
-                              ? InkWell(
-                                  onTap: _onDeleteVoice,
-                                  child: AnimatedBuilder(
-                                      animation: _animation,
-                                      builder: (context, child) {
-                                        return Transform.rotate(
-                                          angle: _animation.value,
-                                          child: Container(
-                                            padding: EdgeInsets.only(
-                                              left: 20,
-                                              right: 16,
-                                              bottom: 10,
-                                            ),
-                                            child: Image.asset(
-                                              Assets.app_assetsIconsIconTrash,
-                                              color: Colors.grey,
-                                              scale: 4,
-                                            ),
-                                          ),
-                                        );
-                                      }),
-                                )
-                              : InkWell(
-                                  onTap: _showActionButton,
-                                  child: Container(
-                                    padding: EdgeInsets.only(
-                                      left: 20,
-                                      right: 16,
-                                      bottom: 10,
-                                    ),
-                                    child: Image.asset(
-                                      Assets.app_assetsIconsProfileForwardButton,
-                                      color: Colors.grey,
-                                      scale: 4,
-                                    ),
-                                  ),
-                                ),
-                          secondChild: Padding(
-                            padding: EdgeInsets.only(
-                              left: 16,
-                              right: 16,
-                              bottom: 10,
-                            ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                GetBuilder<StickerController>(builder: (controller) {
-                                  return InkWell(
-                                    onTap: _onClickPlus,
-                                    child: RotatedBox(
-                                      quarterTurns: 45,
-                                      child: Image.asset(
-                                        controller.showPlusFooter
-                                            ? Assets.app_assetsIconsIconClose
-                                            : Assets.app_assetsIconsIconPlus,
-                                        width: 23,
-                                      ),
-                                    ),
-                                  );
-                                }),
-                                SizedBox(width: 16),
-                                InkWell(
-                                  onTap: onClickCamera,
-                                  child: Image.asset(
-                                    Assets.app_assetsIconsIconCamera,
-                                    width: 23,
-                                  ),
-                                ),
-                                SizedBox(width: 16),
-                                InkWell(
-                                  onTap: onOpenGallery,
-                                  child: Image.asset(
-                                    Assets.app_assetsIconsIconGallery,
-                                    width: 23,
-                                  ),
-                                ),
-                                SizedBox(width: 12),
-                                GestureDetector(
-                                  onTap: _onStartRecordingVoice,
-                                  onLongPress: () {
-                                    isLongPress = true;
-                                    MessageHelper.longPressVibration();
-                                    _onStartRecordingVoice();
-                                  },
-                                  onLongPressEnd: (details) {
-                                    if (isCancelled) {
-                                      _onDeleteVoice();
-                                    } else if (isReleaseHold) {
-                                    } else {
-                                      _onSentVoiceMessage();
-                                    }
-                                    setState(() {
-                                      isLongPress = false;
-                                      isCancelled = false;
-                                      isReleaseHold = false;
-                                    });
-                                  },
-                                  onLongPressMoveUpdate: (details) {
-                                    // pointer to delete
-                                    if (details.offsetFromOrigin.dx < AppConstants.longPressOnDelete) {
-                                      if (!isCancelled) {
-                                        _onMoveToDeleteVoice();
-                                      }
-                                      // pointer to lock
-                                    } else if (details.offsetFromOrigin.dx > AppConstants.longPressOnHoldToRelease) {
-                                      _onMoveToLockRecord();
-                                    } else {
-                                      _resetAnimation();
-                                      setState(() {
-                                        isReleaseHold = false;
-                                        isCancelled = false;
-                                      });
-                                    }
-                                  },
-                                  child: Image.asset(
-                                    Assets.app_assetsIconsIconReconder,
-                                    width: 23,
-                                    color: Colors.grey.shade300,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
+                        // AnimatedCrossFade(
+                        //   layoutBuilder: (topChild, topChildKey, bottomChild, bottomChildKey) {
+                        //     return Stack(
+                        //       clipBehavior: Clip.none,
+                        //       alignment: Alignment.center,
+                        //       children: <Widget>[
+                        //         Positioned(key: bottomChildKey, top: 0, child: bottomChild),
+                        //         Positioned(key: topChildKey, child: topChild),
+                        //       ],
+                        //     );
+                        //   },
+                        //   duration: kThemeChangeDuration,
+                        //   crossFadeState: _messageController.isShowActionIcons
+                        //       ? CrossFadeState.showFirst
+                        //       : CrossFadeState.showSecond,
+                        //   firstChild: isRecording
+                        //       ? InkWell(
+                        //           onTap: _onDeleteVoice,
+                        //           child: AnimatedBuilder(
+                        //               animation: _animation,
+                        //               builder: (context, child) {
+                        //                 return Transform.rotate(
+                        //                   angle: _animation.value,
+                        //                   child: Container(
+                        //                     padding: const EdgeInsets.only(
+                        //                       left: 20,
+                        //                       right: 16,
+                        //                       bottom: 10,
+                        //                     ),
+                        //                     child: Image.asset(
+                        //                       "packages/chatmesdk/assets/icons/icon_trash.png",
+                        //                       color: Colors.grey,
+                        //                       scale: 4,
+                        //                     ),
+                        //                   ),
+                        //                 );
+                        //               }),
+                        //         )
+                        //       : InkWell(
+                        //           onTap: _showActionButton,
+                        //           child: Container(
+                        //             padding: const EdgeInsets.only(
+                        //               left: 20,
+                        //               right: 16,
+                        //               bottom: 10,
+                        //             ),
+                        //             child: Image.asset(
+                        //               "packages/chatmesdk/assets/icons/profile_forward_button.png",
+                        //               color: Colors.grey,
+                        //               scale: 4,
+                        //             ),
+                        //           ),
+                        //         ),
+                        //   secondChild: Padding(
+                        //     padding: const EdgeInsets.only(
+                        //       left: 16,
+                        //       right: 16,
+                        //       bottom: 10,
+                        //     ),
+                        //     child: Row(
+                        //       mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        //       children: [
+                        //         GetBuilder<StickerController>(builder: (controller) {
+                        //           return InkWell(
+                        //             onTap: _onClickPlus,
+                        //             child: RotatedBox(
+                        //               quarterTurns: 45,
+                        //               child: Image.asset(
+                        //                 controller.showPlusFooter
+                        //                     ? "packages/chatmesdk/assets/icons/icon_close.png"
+                        //                     : "packages/chatmesdk/assets/icons/icon_plus.png",
+                        //                 width: 23,
+                        //               ),
+                        //             ),
+                        //           );
+                        //         }),
+                        //         const SizedBox(width: 16),
+                        //         InkWell(
+                        //           onTap: onClickCamera,
+                        //           child: Image.asset(
+                        //             "packages/chatmesdk/assets/icons/icon_camera.png",
+                        //             width: 23,
+                        //           ),
+                        //         ),
+                        //         const SizedBox(width: 16),
+                        //         InkWell(
+                        //           onTap: onOpenGallery,
+                        //           child: Image.asset("packages/chatmesdk/assets/icons/icon_gallery.png", width: 23),
+                        //         ),
+                        //         const SizedBox(width: 12),
+                        //         GestureDetector(
+                        //           onTap: _onStartRecordingVoice,
+                        //           onLongPress: () {
+                        //             isLongPress = true;
+                        //             MessageHelper.longPressVibration();
+                        //             _onStartRecordingVoice();
+                        //           },
+                        //           onLongPressEnd: (details) {
+                        //             if (isCancelled) {
+                        //               _onDeleteVoice();
+                        //             } else if (isReleaseHold) {
+                        //             } else {
+                        //               _onSentVoiceMessage();
+                        //             }
+                        //             setState(() {
+                        //               isLongPress = false;
+                        //               isCancelled = false;
+                        //               isReleaseHold = false;
+                        //             });
+                        //           },
+                        //           onLongPressMoveUpdate: (details) {
+                        //             // pointer to delete
+                        //             if (details.offsetFromOrigin.dx < AppConstants.longPressOnDelete) {
+                        //               if (!isCancelled) {
+                        //                 _onMoveToDeleteVoice();
+                        //               }
+                        //               // pointer to lock
+                        //             } else if (details.offsetFromOrigin.dx > AppConstants.longPressOnHoldToRelease) {
+                        //               _onMoveToLockRecord();
+                        //             } else {
+                        //               _resetAnimation();
+                        //               setState(() {
+                        //                 isReleaseHold = false;
+                        //                 isCancelled = false;
+                        //               });
+                        //             }
+                        //           },
+                        //           child: Image.asset(
+                        //             "packages/chatmesdk/assets/icons/icon_reconder.png",
+                        //             width: 23,
+                        //             color: Colors.grey.shade300,
+                        //           ),
+                        //         ),
+                        //       ],
+                        //     ),
+                        //   ),
+                        // ),
+
+                        const SizedBox(width: 12),
                         Expanded(
                           child: Stack(
                             children: [
                               AnimatedContainer(
                                   duration: kTabScrollDuration,
                                   padding: EdgeInsets.zero,
-                                  margin: EdgeInsets.only(bottom: 10),
+                                  margin: const EdgeInsets.only(bottom: 10),
                                   decoration: BoxDecoration(
-                                    color: AppColors.textFiledBackgroundColor,
+                                    color: const Color(0xff505050).withOpacity(.05),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: Stack(
                                     children: [
                                       Padding(
-                                        padding: EdgeInsets.symmetric(
+                                        padding: const EdgeInsets.symmetric(
                                           vertical: 10,
                                           horizontal: 12,
                                         ),
@@ -308,13 +295,13 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
                                           controller: _messageController.msgTextController,
                                           style: const TextStyle(
                                             fontSize: 15.33,
-                                            color: AppColors.scaffoldBackground,
+                                            color: Colors.black87,
                                           ),
                                           showCursor: true,
                                           autofocus: false,
                                           maxLines: null,
                                           enabled: true,
-                                          cursorColor: AppColors.primaryColor,
+                                          cursorColor: AppColors.seconderyColor,
                                           onChanged: (_) {
                                             _validateOnPasteEvent();
                                             if (!_messageController.shouldHaveButtonPadding ||
@@ -324,12 +311,12 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
                                           },
                                           onTap: _tapOnTextField,
                                           decoration: InputDecoration(
-                                            contentPadding: EdgeInsets.only(right: 22),
+                                            contentPadding: const EdgeInsets.only(right: 22),
                                             isCollapsed: true,
                                             hintText: 'write_a_message'.tr,
                                             filled: true,
                                             fillColor: Colors.transparent,
-                                            hintStyle: TextStyle(
+                                            hintStyle: const TextStyle(
                                               fontSize: 13.33,
                                               color: Color(0xFF9C9C9C),
                                             ),
@@ -357,9 +344,8 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
                                                   if (time.duration.inMinutes == 2 && isRecording) {
                                                     _onSentVoiceMessage();
                                                   }
-                                                  return Text(
-                                                      '${MessageHelper.formatDuration(time.duration.inSeconds)}',
-                                                      style: TextStyle(
+                                                  return Text(MessageHelper.formatDuration(time.duration.inSeconds),
+                                                      style: const TextStyle(
                                                         fontSize: 13.3,
                                                         fontWeight: FontWeight.w500,
                                                         color: Colors.white,
@@ -370,53 +356,53 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
                                       ),
                                     ],
                                   )),
-                              Positioned(
-                                bottom: 0,
-                                right: 0,
-                                child: Visibility(
-                                  visible: !isRecording,
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 10,
-                                      vertical: 18,
-                                    ),
-                                    child: InkWell(
-                                      onTap: () {
-                                        if (_messageController.showFooter) {
-                                          _focus.requestFocus();
-                                        } else {
-                                          _onClickEmoji();
-                                        }
-                                      },
-                                      child: Image.asset(
-                                        _messageController.showFooter
-                                            ? Assets.app_assetsIconsIconKeyboard
-                                            : Assets.app_assetsIconsInsertEmoji,
-                                        height: 20,
-                                        color: Color(0xffCDCDCD),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
+                              // Positioned(
+                              //   bottom: 0,
+                              //   right: 0,
+                              //   child: Visibility(
+                              //     visible: !isRecording,
+                              //     child: Padding(
+                              //       padding: const EdgeInsets.symmetric(
+                              //         horizontal: 10,
+                              //         vertical: 18,
+                              //       ),
+                              //       child: InkWell(
+                              //         onTap: () {
+                              //           if (_messageController.showFooter) {
+                              //             _focus.requestFocus();
+                              //           } else {
+                              //             _onClickEmoji(context);
+                              //           }
+                              //         },
+                              //         child: Image.asset(
+                              //           _messageController.showFooter
+                              //               ? "packages/chatmesdk/assets/icons/icon_keyboard.png"
+                              //               : "packages/chatmesdk/assets/icons/insert_emoji.png",
+                              //           height: 20,
+                              //           color: const Color(0xffCDCDCD),
+                              //         ),
+                              //       ),
+                              //     ),
+                              //   ),
+                              // ),
                             ],
                           ),
                         ),
                         AnimatedCrossFade(
-                          duration: Duration(milliseconds: 400),
+                          duration: const Duration(milliseconds: 400),
                           alignment: Alignment.centerLeft,
                           crossFadeState: isLongPress ? CrossFadeState.showSecond : CrossFadeState.showFirst,
-                          secondChild: SizedBox(width: 26),
+                          secondChild: const SizedBox(width: 26),
                           firstChild: Visibility(
                             visible: !isLongPress,
                             child: InkWell(
                               onTap: _onMessageSent,
                               child: Container(
                                 padding: const EdgeInsets.all(8),
-                                margin: EdgeInsets.only(bottom: 8),
-                                child: Icon(
+                                margin: const EdgeInsets.only(bottom: 8),
+                                child: const Icon(
                                   Icons.send_rounded,
-                                  color: Colors.white,
+                                  color: Color(0xff200E32),
                                   size: 26,
                                 ),
                               ),
@@ -432,12 +418,12 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
             //* sticker footer section
             GetBuilder<StickerController>(builder: (_) {
               return AnimatedSize(
-                duration: Duration(milliseconds: AppConstants.animationDuration200),
+                duration: const Duration(milliseconds: AppConstants.animationDuration200),
                 child: _stickerController.showEmojiFooter
                     ? StickerChatTextfieldFooterScreen(
                         onSentSticker: _onSentSticker,
                       )
-                    : Offstage(),
+                    : const Offstage(),
               );
             }),
             //* plus footer section
@@ -446,9 +432,11 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
                 width: Get.width,
                 color: AppColors.txtSeconddaryColor,
                 child: AnimatedSize(
-                  duration: Duration(milliseconds: AppConstants.animationDuration200),
+                  duration: const Duration(milliseconds: AppConstants.animationDuration200),
                   curve: Curves.ease,
-                  child: _stickerController.showPlusFooter ? ChatroomFooterSection(isGroup: false) : SizedBox(),
+                  child: _stickerController.showPlusFooter
+                      ? const ChatroomFooterSection(isGroup: false)
+                      : const SizedBox(),
                 ),
               );
             }),
@@ -472,18 +460,18 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
   }
 
   void onClickCamera() async {
-    AssetEntity? _selectFile = await Get.find<ImageController>().takeCamera();
-    if (_selectFile != null) {
-      Get.find<ChatRoomMessageController>().selectFiles = [_selectFile];
-      await Get.to(() => ChatSelectMediaScreen());
+    AssetEntity? selectFile = await Get.find<ImageController>().takeCamera();
+    if (selectFile != null) {
+      Get.find<ChatRoomMessageController>().selectFiles = [selectFile];
+      await Get.to(() => const ChatSelectMediaScreen());
     }
   }
 
   void onOpenGallery() async {
-    List<AssetEntity>? _selectFiles = await Get.find<ImageController>().openMedia(maxLength: 30);
-    if (_selectFiles != null && _selectFiles.isNotEmpty) {
-      _messageController.selectFiles = _selectFiles;
-      await Get.to(() => ChatSelectMediaScreen());
+    List<AssetEntity>? selectFiles = await Get.find<ImageController>().openMedia(maxLength: 30);
+    if (selectFiles != null && selectFiles.isNotEmpty) {
+      _messageController.selectFiles = selectFiles;
+      await Get.to(() => const ChatSelectMediaScreen());
     }
   }
 
@@ -497,13 +485,13 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
     });
   }
 
-  void _onClickEmoji() async {
+  void _onClickEmoji(BuildContext ctx) async {
     FocusManager.instance.primaryFocus?.unfocus();
-    int _delayTime = 0;
-    if (MediaQuery.of(Get.context!).viewInsets.bottom > 0.0) {
-      _delayTime = AppConstants.animationDuration200;
+    int delayTime = 0;
+    if (MediaQuery.of(ctx).viewInsets.bottom > 0.0) {
+      delayTime = AppConstants.animationDuration200;
     }
-    Future.delayed(Duration(milliseconds: _delayTime), () {
+    Future.delayed(Duration(milliseconds: delayTime), () {
       _messageController.shouldHaveButtonPadding = false;
       _stickerController.showPlusFooter = false;
       _messageController.showFooter = true;
@@ -582,10 +570,10 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
       controller.listMessage.add(uploadMessage);
       controller.isOnReplying = false;
       controller.update();
-      String _extension = path.split('.').last;
+      String extension = path.split('.').last;
       var attachmentId = await _imageController.uploadAttachment(
         path,
-        MediaType('voice', _extension),
+        MediaType('voice', extension),
       );
       if (attachmentId != null) {
         _messageController.onSentVoiceMessage(attachmentId);
