@@ -129,6 +129,7 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
                   child: AnimatedSize(
                     duration: kTabScrollDuration,
                     child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         // AnimatedCrossFade(
                         //   layoutBuilder: (topChild, topChildKey, bottomChild, bottomChildKey) {
@@ -267,7 +268,18 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
                         //     ),
                         //   ),
                         // ),
-
+                        const SizedBox(width: 12),
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: InkWell(
+                            onTap: onOpenGallery,
+                            child: Image.asset(
+                              "packages/chatmesdk/assets/icons/icon_gallery.png",
+                              width: 23,
+                              color: AppColors.seconderyColor,
+                            ),
+                          ),
+                        ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Stack(
@@ -468,7 +480,7 @@ class _ChatRoomTextFieldState extends State<ChatRoomTextField> with TickerProvid
   }
 
   void onOpenGallery() async {
-    List<AssetEntity>? selectFiles = await Get.find<ImageController>().openMedia(maxLength: 30);
+    List<AssetEntity>? selectFiles = await Get.put(ImageController()).openMedia(context, maxLength: 30);
     if (selectFiles != null && selectFiles.isNotEmpty) {
       _messageController.selectFiles = selectFiles;
       await Get.to(() => const ChatSelectMediaScreen());

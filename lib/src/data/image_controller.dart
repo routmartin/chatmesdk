@@ -2,9 +2,9 @@ import 'dart:async';
 import 'dart:developer';
 import 'dart:io';
 import 'dart:math' as math;
-import 'dart:typed_data';
+// import 'dart:typed_data';
 import 'package:cr_file_saver/file_saver.dart';
-import 'package:device_info_plus/device_info_plus.dart';
+// import 'package:device_info_plus/device_info_plus.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_native_image/flutter_native_image.dart';
@@ -13,12 +13,11 @@ import 'package:http_parser/http_parser.dart';
 import 'package:image_cropper/image_cropper.dart';
 // import 'package:image_gallery_saver/image_gallery_saver.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:mime/mime.dart';
+import 'package:mime/mime.dart' as mime;
 
 import 'package:path_provider/path_provider.dart';
 import 'package:wechat_assets_picker/wechat_assets_picker.dart';
 import 'package:wechat_camera_picker/wechat_camera_picker.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:dio/dio.dart' as dio;
 import '../util/helper/crash_report.dart';
 import '../util/theme/app_color.dart';
@@ -160,11 +159,11 @@ class ImageController extends GetxController {
     }
   }
 
-  Future<List<AssetEntity>?> openMedia({maxLength}) async {
+  Future<List<AssetEntity>?> openMedia(BuildContext context, {maxLength}) async {
     List<AssetEntity>? result;
     try {
       result = await AssetPicker.pickAssets(
-        Get.context!,
+        context,
         pickerConfig: AssetPickerConfig(maxAssets: maxLength),
       );
     } catch (e) {
@@ -223,7 +222,7 @@ class ImageController extends GetxController {
     final completer = Completer<String?>();
     List<dio.MultipartFile> files = [];
     dio.MultipartFile filePath;
-    final mimeType = lookupMimeType(path) ?? '';
+    final mimeType = mime.lookupMimeType(path) ?? '';
     final isImage = mimeType.startsWith('image/');
 
     // check need to comopress file or not

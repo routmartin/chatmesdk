@@ -29,7 +29,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   final openChatUrl = "http://open-core.chatme.com";
   final String token =
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXJjaGFudElkIjoiNjQ5MTMyYmYzZjVjMmVhZTBhMWRlNmYyIiwidXNlcklkIjoiNjVjZGJjMDU3ZjZmNzkyZWI4M2NkNDVlIiwidG9rZW5JZCI6ImM2MjkyNzFlLWY2MTMtNDNkZS04ZDU3LTFlOTA1N2JjMmYyNCIsImlhdCI6MTcwODA3MzE2NSwiZXhwIjoxNzA4MDczNzY1fQ.2IvkLtSZ6DkpAJxd5wI0yWc20PvrXRQDCKBuVfUMJYI";
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJtZXJjaGFudElkIjoiNjQ5MTMyYmYzZjVjMmVhZTBhMWRlNmYyIiwidXNlcklkIjoiNjVjZGJjMDU3ZjZmNzkyZWI4M2NkNDVlIiwidG9rZW5JZCI6IjY4NzllOGUzLTdkNDgtNGZhMS04NzhhLWY4NjdkNTZkYTRlMCIsImlhdCI6MTcwODA3OTIwOCwiZXhwIjoxNzA4MDc5ODA4fQ.ydYCzdzbqbVlHW1xg-Qb9wAkoYb13W0Ew-cLOi704Mc";
 
   @override
   void initState() {

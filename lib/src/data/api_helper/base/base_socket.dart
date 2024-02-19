@@ -94,7 +94,6 @@ class BaseSocket {
     );
 
     socket.on('error', (error) async {
-      print('socket error:$error');
       if (error['message'] == 'token expired') {
       } else if (error['message'] == 'unauthorized') {
         // BaseSocket.destroyAllAuthSocketConnection();
@@ -103,7 +102,6 @@ class BaseSocket {
 
     try {
       socket.connect();
-      print(socket.nsp);
       completor.complete(socket);
     } catch (e) {
       completor.completeError(socket);
@@ -114,7 +112,6 @@ class BaseSocket {
     });
     socket.onDisconnect((e) {
       log('autDisconnec:$nameSpace', name: 'Basesocket');
-      print(e);
     });
     return completor.future;
   }

@@ -194,7 +194,7 @@ class _ChatRoomAppBarState extends State<ChatRoomAppBar> {
 
   void onClearChat() {
     controller.onClearChat();
-    Get.back();
+    Navigator.pop(context);
   }
 
   void onReport() {

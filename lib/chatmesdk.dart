@@ -4,7 +4,6 @@ import 'dart:async';
 
 import 'package:chatmesdk/src/data/api_helper/base/base.dart';
 import 'package:flutter/material.dart';
-import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'src/view/chat_screen/chat_room/chat_room_screen.dart';
@@ -17,7 +16,6 @@ class Chatmesdk {
     await GetStorage.init();
     await BaseSocket.initSocketConnection(token, openChatUrl!);
     await initializeDateFormatting();
-    Get.testMode = true;
   }
 
   static void navigateToChatList(BuildContext context) {

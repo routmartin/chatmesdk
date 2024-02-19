@@ -150,7 +150,7 @@ class SocketPath {
   static const String seenMessage = 'message:seenMessage';
   static const String userOnline = 'user:online';
   static const String hideChatRoom = 'room:hideChat';
-  static const String deleteChat = 'message:deleteChat';
+  static const String deleteChat = 'message:clearChatMessages';
   static const String saveDraft = 'room:saveDraft';
   static const String deleteDraft = 'room:deleteDraft';
   static const String totalUnReadCount = 'message:countUnread';

@@ -830,7 +830,6 @@ class ChatRoomMessageController extends GetxController with WidgetsBindingObserv
         messageBodyRequest,
         ack: (res) async {
           var result = res as Map;
-          print(result);
           if (result.containsKey('data')) {
             MessageHelper.playMessageSentSound();
             isOnReplying = false;
@@ -848,22 +847,10 @@ class ChatRoomMessageController extends GetxController with WidgetsBindingObserv
     return completer.future;
   }
 
-  void _mapChatArgument(arguments) async {
-    if (arguments == null) return;
-    try {
-      for (int i = 0; i < arguments.length; i++) {
-        if (i == 0) roomId = arguments[0] ?? '';
-        if (i == 1) rootMessageDate = arguments[1] ?? '';
-      }
-    } catch (e) {
-      rethrow;
-    }
-  }
-
   void _listenReceiveMessage() async {
     _messageSokcet.on(SocketPath.receiveMessage, (data) {
       var responseMap = data as Map;
-      print(responseMap);
+
       var receiveRoomId = data['data']['room'];
       if (receiveRoomId == roomId) {
         var messageMap = responseMap['data']['message'];
